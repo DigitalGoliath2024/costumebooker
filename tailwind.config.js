@@ -1,0 +1,56 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  theme: {
+    extend: {
+      colors: {
+        primary: {
+          50: '#f0f7fa',
+          100: '#e0eff5',
+          200: '#bae0eb',
+          300: '#8ccbe0',
+          400: '#54b0d3',
+          500: '#2f96bf',
+          600: '#2479a1',
+          700: '#1d6183',
+          800: '#194d69',
+          900: '#163e56',
+          950: '#0f2a3b',
+        },
+        teal: {
+          50: '#effaf9',
+          100: '#d7f4f1',
+          200: '#b2e9e4',
+          300: '#81d8d1',
+          400: '#49bfb7',
+          500: '#339f99',
+          600: '#2b817d',
+          700: '#286765',
+          800: '#255352',
+          900: '#224645',
+          950: '#0f2828',
+        },
+        accent: {
+          50: '#f4f6f8',
+          100: '#e3e9ed',
+          200: '#ccd6df',
+          300: '#a9bac8',
+          400: '#8095ab',
+          500: '#637992',
+          600: '#4f617a',
+          700: '#425064',
+          800: '#394454',
+          900: '#333b47',
+          950: '#22272f',
+        },
+      },
+      backgroundImage: {
+        'gradient-premium': 'linear-gradient(135deg, #2b817d 0%, #1d6183 100%)',
+        'gradient-premium-hover': 'linear-gradient(135deg, #255352 0%, #194d69 100%)',
+        'gradient-accent': 'linear-gradient(135deg, #425064 0%, #2b817d 100%)',
+        'gradient-metallic': 'linear-gradient(135deg, #f4f6f8 0%, #ccd6df 100%)',
+      },
+    },
+  },
+  plugins: [],
+};

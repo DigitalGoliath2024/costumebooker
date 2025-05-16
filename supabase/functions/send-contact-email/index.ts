@@ -1,0 +1,76 @@
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { SmtpClient } from 'npm:nodemailer';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': 'https://costumecameos.com',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+serve(async (req) => {
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
+  try {
+    const { senderName, senderEmail, message, recipientEmail } = await req.json();
+
+    // Validate inputs
+    if (!senderName || !senderEmail || !message || !recipientEmail) {
+      return new Response(
+        JSON.stringify({ error: 'Missing required fields' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Create SMTP client
+    const smtp = new SmtpClient({
+      host: Deno.env.get('SMTP_HOST'),
+      port: Number(Deno.env.get('SMTP_PORT')),
+      secure: true,
+      auth: {
+        user: Deno.env.get('SMTP_USER'),
+        pass: Deno.env.get('SMTP_PASS'),
+      },
+    });
+
+    // Send email
+    await smtp.sendMail({
+      from: `"CostumeCameos" <noreply@costumecameos.com>`,
+      to: recipientEmail,
+      replyTo: senderEmail,
+      subject: `New Contact Message from ${senderName}`,
+      text: `You have received a new message through CostumeCameos:
+
+From: ${senderName} (${senderEmail})
+
+Message:
+${message}
+
+---
+This message was sent through CostumeCameos. You can reply directly to this email to contact ${senderName}.`,
+      html: `
+        <h2>You have received a new message through CostumeCameos</h2>
+        <p><strong>From:</strong> ${senderName} (${senderEmail})</p>
+        <div style="margin: 20px 0; padding: 20px; background: #f5f5f5; border-radius: 5px;">
+          ${message.replace(/\n/g, '<br>')}
+        </div>
+        <p style="color: #666; font-size: 0.9em;">
+          This message was sent through CostumeCameos. You can reply directly to this email to contact ${senderName}.
+        </p>
+      `,
+    });
+
+    return new Response(
+      JSON.stringify({ success: true }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  } catch (error) {
+    console.error('Error sending email:', error);
+    return new Response(
+      JSON.stringify({ error: 'Failed to send email' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});
