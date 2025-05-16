@@ -1,6 +1,6 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import { useAuth } from '../../contexts/AuthContext';
@@ -54,6 +54,14 @@ const SignInForm: React.FC = () => {
         })}
         error={errors.password?.message}
       />
+      <div className="flex justify-end">
+        <Link
+          to="/forgot-password"
+          className="text-sm text-purple-700 hover:text-purple-800"
+        >
+          Forgot password?
+        </Link>
+      </div>
       <div className="pt-2">
         <Button type="submit" disabled={isSubmitting} className="w-full">
           {isSubmitting ? 'Signing In...' : 'Sign In'}
