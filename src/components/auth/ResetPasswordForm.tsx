@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import { supabase } from '../../lib/supabase';
@@ -12,6 +12,7 @@ type ResetPasswordFormValues = {
 };
 
 const ResetPasswordForm: React.FC = () => {
+  const [isLoading, setIsLoading] = useState(true);
   const {
     register,
     handleSubmit,
@@ -20,7 +21,34 @@ const ResetPasswordForm: React.FC = () => {
   } = useForm<ResetPasswordFormValues>();
   
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const handleHashParams = async () => {
+      try {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+        const type = hashParams.get('type');
+
+        if (accessToken && type === 'recovery') {
+          const { data: { session }, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken || '',
+          });
+
+          if (error) throw error;
+        }
+      } catch (error) {
+        console.error('Error setting session:', error);
+        toast.error('Invalid or expired reset link');
+        navigate('/signin');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    handleHashParams();
+  }, [navigate]);
 
   const onSubmit = async (data: ResetPasswordFormValues) => {
     try {
@@ -37,6 +65,14 @@ const ResetPasswordForm: React.FC = () => {
       toast.error(error.message || 'Failed to reset password');
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="text-center">
+        <p className="text-gray-600">Verifying reset link...</p>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
