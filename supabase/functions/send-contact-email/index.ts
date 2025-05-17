@@ -26,10 +26,10 @@ serve(async (req) => {
   }
 
   try {
-    const { senderName, senderEmail, message, recipientEmail } = await req.json();
+    const { senderName, senderEmail, message, recipientEmail, profileId } = await req.json();
 
     // Validate required fields
-    if (!senderName || !senderEmail || !message || !recipientEmail) {
+    if (!senderName || !senderEmail || !message || !recipientEmail || !profileId) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
         status: 400,
         headers: corsHeaders,
@@ -62,11 +62,12 @@ serve(async (req) => {
         sender_name: senderName,
         sender_email: senderEmail,
         message: message,
-        profile_id: recipientEmail, // This will be linked to the profile's ID
+        profile_id: profileId, // Now correctly using the profile ID instead of email
       });
 
     if (dbError) {
-      throw new Error('Failed to store message in database');
+      console.error('Database error:', dbError);
+      throw new Error(`Failed to store message in database: ${dbError.message}`);
     }
 
     // Set up SMTP client
