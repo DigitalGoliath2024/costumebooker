@@ -26,10 +26,26 @@ serve(async (req) => {
   }
 
   try {
-    const { senderName, senderEmail, message, recipientEmail, profileId } = await req.json();
+    // Log request start
+    console.log('Processing contact form submission');
+
+    const requestData = await req.json();
+    console.log('Received data:', {
+      ...requestData,
+      message: '[REDACTED]' // Don't log the actual message content
+    });
+
+    const { senderName, senderEmail, message, recipientEmail, profileId } = requestData;
 
     // Validate required fields
     if (!senderName || !senderEmail || !message || !recipientEmail || !profileId) {
+      console.log('Missing required fields:', {
+        hasSenderName: !!senderName,
+        hasSenderEmail: !!senderEmail,
+        hasMessage: !!message,
+        hasRecipientEmail: !!recipientEmail,
+        hasProfileId: !!profileId
+      });
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
         status: 400,
         headers: corsHeaders,
@@ -39,6 +55,7 @@ serve(async (req) => {
     // Validate email format
     const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z]{2,}$/i;
     if (!emailRegex.test(senderEmail) || !emailRegex.test(recipientEmail)) {
+      console.log('Invalid email format:', { senderEmail, recipientEmail });
       return new Response(JSON.stringify({ error: 'Invalid email format' }), {
         status: 400,
         headers: corsHeaders,
@@ -50,9 +67,11 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
     if (!supabaseUrl || !supabaseKey) {
+      console.error('Missing Supabase credentials');
       throw new Error('Missing Supabase credentials');
     }
 
+    console.log('Initializing Supabase client');
     const supabaseClient = createClient(supabaseUrl, supabaseKey, {
       auth: {
         persistSession: false,
@@ -61,7 +80,8 @@ serve(async (req) => {
     });
 
     // Store message in database
-    const { error: dbError } = await supabaseClient
+    console.log('Storing message in database');
+    const { data: insertData, error: dbError } = await supabaseClient
       .from('contact_messages')
       .insert({
         profile_id: profileId,
@@ -69,12 +89,21 @@ serve(async (req) => {
         sender_email: senderEmail,
         message: message,
         is_read: false,
-      });
+      })
+      .select()
+      .single();
 
     if (dbError) {
-      console.error('Database error:', dbError);
+      console.error('Database error:', {
+        code: dbError.code,
+        message: dbError.message,
+        details: dbError.details,
+        hint: dbError.hint
+      });
       throw new Error(`Database error: ${dbError.message}`);
     }
+
+    console.log('Message stored successfully:', { messageId: insertData?.id });
 
     // Validate SMTP credentials
     const smtpHost = Deno.env.get('SMTP_HOST');
@@ -83,9 +112,11 @@ serve(async (req) => {
     const smtpPass = Deno.env.get('SMTP_PASS');
 
     if (!smtpHost || !smtpPort || !smtpUser || !smtpPass) {
+      console.error('Missing SMTP credentials');
       throw new Error('Missing SMTP credentials');
     }
 
+    console.log('Sending email via SMTP');
     // Set up SMTP client
     const client = new SmtpClient(smtpHost, smtpPort, {
       auth: {
@@ -119,6 +150,7 @@ This message was sent through CostumeCameos. You can reply directly to this emai
         data: emailContent,
       });
       await client.quit();
+      console.log('Email sent successfully');
     } catch (emailError) {
       console.error('SMTP error:', emailError);
       throw new Error(`Failed to send email: ${emailError.message}`);
