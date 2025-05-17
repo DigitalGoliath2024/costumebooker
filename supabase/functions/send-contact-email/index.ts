@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { SmtpClient } from "npm:nodemailer";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://costumecameos.com', // ← Use '*' if testing locally
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Max-Age': '86400',
@@ -10,15 +10,18 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight
+  // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 204,
-      headers: corsHeaders
+    return new Response('OK', {
+      status: 200,
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'text/plain',
+      }
     });
   }
 
-  // Only allow POST requests
+  // Only allow POST
   if (req.method !== 'POST') {
     return new Response(
       JSON.stringify({ error: 'Method not allowed' }), 
@@ -32,7 +35,6 @@ serve(async (req) => {
   try {
     const { senderName, senderEmail, message, recipientEmail } = await req.json();
 
-    // Validate required fields
     if (!senderName || !senderEmail || !message || !recipientEmail) {
       return new Response(
         JSON.stringify({ error: 'Missing required fields' }),
@@ -43,7 +45,6 @@ serve(async (req) => {
       );
     }
 
-    // Validate email format
     const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
     if (!emailRegex.test(senderEmail) || !emailRegex.test(recipientEmail)) {
       return new Response(
@@ -55,15 +56,6 @@ serve(async (req) => {
       );
     }
 
-    // Log environment variables (for debugging)
-    console.log('SMTP Configuration:', {
-      host: Deno.env.get('SMTP_HOST'),
-      port: Deno.env.get('SMTP_PORT'),
-      user: 'SMTP_USER exists: ' + !!Deno.env.get('SMTP_USER'),
-      pass: 'SMTP_PASS exists: ' + !!Deno.env.get('SMTP_PASS')
-    });
-
-    // Create SMTP client
     const smtp = new SmtpClient({
       host: Deno.env.get('SMTP_HOST') || '',
       port: Number(Deno.env.get('SMTP_PORT')) || 587,
@@ -74,7 +66,6 @@ serve(async (req) => {
       },
     });
 
-    // Send email
     await smtp.sendMail({
       from: `"CostumeCameos" <noreply@costumecameos.com>`,
       to: recipientEmail,
