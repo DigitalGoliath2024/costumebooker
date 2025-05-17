@@ -28,8 +28,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (error) {
-          throw error;
+        if (error || !session) {
+          // Clear auth state if there's an error or no session
+          setUser(null);
+          setSession(null);
+          return;
         }
 
         if (session?.user) {
@@ -41,6 +44,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } catch (error) {
         console.error('Error checking session:', error);
+        // Clear auth state on error
+        setUser(null);
+        setSession(null);
       } finally {
         setLoading(false);
       }
@@ -49,7 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         if (session?.user) {
           setUser({
             id: session.user.id,
@@ -92,10 +98,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    
-    if (error) {
-      throw error;
+    try {
+      // Clear local auth state first
+      setUser(null);
+      setSession(null);
+
+      // Then attempt to sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Error during sign out:', error);
+        // Error is not thrown since we already cleared local state
+      }
+    } catch (error) {
+      console.error('Unexpected error during sign out:', error);
+      // Error is not thrown since we already cleared local state
     }
   };
 
