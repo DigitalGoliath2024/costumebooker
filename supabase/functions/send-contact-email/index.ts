@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import nodemailer from "https://esm.sh/nodemailer@6.9.18";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -54,49 +53,45 @@ serve(async (req) => {
       );
     }
 
-    // Create SMTP transport with more flexible configuration
-    const smtp = nodemailer.createTransport({
-      host: Deno.env.get('SMTP_HOST'),
-      port: Number(Deno.env.get('SMTP_PORT')) || 587,
-      secure: Number(Deno.env.get('SMTP_PORT')) === 465, // Only use secure for port 465
-      auth: {
-        user: Deno.env.get('SMTP_USER'),
-        pass: Deno.env.get('SMTP_PASS'),
-      },
-      tls: {
-        rejectUnauthorized: false // Allow self-signed certificates
-      }
-    });
-
-    // Send email with HTML format
-    await smtp.sendMail({
-      from: `"CostumeCameos" <noreply@costumecameos.com>`,
-      to: recipientEmail,
-      replyTo: senderEmail,
-      subject: `New Message from ${senderName} via CostumeCameos`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #4a5568;">New Contact Message</h2>
-          <p style="color: #718096;"><strong>From:</strong> ${senderName} (${senderEmail})</p>
-          <div style="background-color: #f7fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <p style="color: #4a5568; white-space: pre-wrap;">${message}</p>
+    // Prepare email content
+    const emailContent = {
+      personalizations: [{
+        to: [{ email: recipientEmail }],
+        subject: `New Message from ${senderName} via CostumeCameos`
+      }],
+      from: { email: "noreply@costumecameos.com", name: "CostumeCameos" },
+      reply_to: { email: senderEmail, name: senderName },
+      content: [{
+        type: "text/html",
+        value: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #4a5568;">New Contact Message</h2>
+            <p style="color: #718096;"><strong>From:</strong> ${senderName} (${senderEmail})</p>
+            <div style="background-color: #f7fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <p style="color: #4a5568; white-space: pre-wrap;">${message}</p>
+            </div>
+            <p style="color: #718096; font-size: 14px;">
+              This message was sent through CostumeCameos. You can reply directly to this email to respond to ${senderName}.
+            </p>
           </div>
-          <p style="color: #718096; font-size: 14px;">
-            This message was sent through CostumeCameos. You can reply directly to this email to respond to ${senderName}.
-          </p>
-        </div>
-      `,
-      text: `
-New Contact Message
+        `
+      }]
+    };
 
-From: ${senderName} (${senderEmail})
-
-Message:
-${message}
-
-This message was sent through CostumeCameos. You can reply directly to this email to respond to ${senderName}.
-      `.trim(),
+    // Send email using SendGrid API
+    const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${Deno.env.get('SENDGRID_API_KEY')}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(emailContent)
     });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`SendGrid API error: ${error}`);
+    }
 
     return new Response(
       JSON.stringify({ success: true }), 
