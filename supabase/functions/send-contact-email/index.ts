@@ -1,29 +1,22 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { SmtpClient } from "npm:emailjs-smtp-client@2.0.1";
 
-// Update CORS headers to handle both development and production environments
 const corsHeaders = {
-  'Access-Control-Allow-Origin': Deno.env.get('ENVIRONMENT') === 'production' 
-    ? 'https://costumecameos.com'
-    : '*',
+  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   'Content-Type': 'application/json',
 };
 
 serve(async (req) => {
-  // ✅ Handle CORS preflight.
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('OK', {
       status: 200,
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'text/plain',
-      }
+      headers: corsHeaders
     });
   }
 
-  // ❌ Block everything except POST here   
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
@@ -34,7 +27,7 @@ serve(async (req) => {
   try {
     const { senderName, senderEmail, message, recipientEmail } = await req.json();
 
-    // ✅ Basic field validation
+    // Validate required fields
     if (!senderName || !senderEmail || !message || !recipientEmail) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
         status: 400,
@@ -42,7 +35,7 @@ serve(async (req) => {
       });
     }
 
-    // ✅ Email format validation
+    // Validate email format
     const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z]{2,}$/i;
     if (!emailRegex.test(senderEmail) || !emailRegex.test(recipientEmail)) {
       return new Response(JSON.stringify({ error: 'Invalid email format' }), {
@@ -51,7 +44,7 @@ serve(async (req) => {
       });
     }
 
-    // ✅ Set up SMTP clients. 
+    // Set up SMTP client
     const client = new SmtpClient(
       Deno.env.get('SMTP_HOST') || '',
       Number(Deno.env.get('SMTP_PORT')) || 587,
@@ -60,8 +53,7 @@ serve(async (req) => {
           user: Deno.env.get('SMTP_USER') || '',
           pass: Deno.env.get('SMTP_PASS') || '',
         },
-        useSecureTransport: Number(Deno.env.get('SMTP_PORT')) === 465,
-        requireTLS: Number(Deno.env.get('SMTP_PORT')) === 587,
+        useSecureTransport: true,
       }
     );
 
@@ -80,7 +72,7 @@ ${message}
 
 This message was sent through CostumeCameos. You can reply directly to this email to respond to ${senderName}.`;
 
-    // ✅ Send email. 
+    // Send email
     await client.connect();
     await client.send({
       from: 'noreply@costumecameos.com',
