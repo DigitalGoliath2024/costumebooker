@@ -48,7 +48,7 @@ serve(async (req) => {
       });
     }
 
-    // ✅ Set up SMTP client
+    // ✅ Set up SMTP clients
     const client = new SmtpClient(
       Deno.env.get('SMTP_HOST') || '',
       Number(Deno.env.get('SMTP_PORT')) || 587,
