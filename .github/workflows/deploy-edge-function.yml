@@ -17,7 +17,8 @@ jobs:
 
       - name: Install Supabase CLI
         run: |
-          curl -sL https://github.com/supabase/cli/releases/download/v1.146.2/supabase_1.146.2_linux_amd64.tar.gz | tar -xz
+          curl -sL https://github.com/supabase/cli/releases/download/v1.146.2/supabase_1.146.2_linux_amd64.tar.gz -o supabase.tar.gz
+          tar -xzf supabase.tar.gz
           sudo mv supabase /usr/local/bin
 
       - name: Deploy Edge Function
@@ -26,4 +27,3 @@ jobs:
         run: |
           supabase link --project-ref dbmvtqvualzpqpjsqdwq
           supabase functions deploy send-contact-email --no-verify-jwt
-
