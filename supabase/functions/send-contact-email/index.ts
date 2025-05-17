@@ -1,39 +1,53 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { SmtpClient } from "npm:nodemailer";
 
+// Define CORS headers with explicit origin
 const corsHeaders = {
   'Access-Control-Allow-Origin': 'https://costumecameos.com',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': '*',
   'Access-Control-Max-Age': '86400',
+  'Access-Control-Allow-Credentials': 'true'
 };
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, {
-      status: 204,
+      status: 204, // Use 204 for OPTIONS
       headers: corsHeaders
     });
   }
 
-  try {
-    if (req.method !== 'POST') {
-      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+  // Only allow POST requests
+  if (req.method !== 'POST') {
+    return new Response(
+      JSON.stringify({ error: 'Method not allowed' }), 
+      {
         status: 405,
         headers: {
           ...corsHeaders,
           'Content-Type': 'application/json'
         }
-      });
-    }
+      }
+    );
+  }
 
+  try {
     const { senderName, senderEmail, message, recipientEmail } = await req.json();
 
-    // Validate inputs
+    // Validate required fields
     if (!senderName || !senderEmail || !message || !recipientEmail) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields' }),
+        JSON.stringify({ 
+          error: 'Missing required fields',
+          details: {
+            senderName: !senderName,
+            senderEmail: !senderEmail,
+            message: !message,
+            recipientEmail: !recipientEmail
+          }
+        }),
         {
           status: 400,
           headers: {
@@ -48,7 +62,13 @@ serve(async (req) => {
     const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
     if (!emailRegex.test(senderEmail) || !emailRegex.test(recipientEmail)) {
       return new Response(
-        JSON.stringify({ error: 'Invalid email format' }),
+        JSON.stringify({ 
+          error: 'Invalid email format',
+          details: {
+            senderEmail: !emailRegex.test(senderEmail),
+            recipientEmail: !emailRegex.test(recipientEmail)
+          }
+        }),
         {
           status: 400,
           headers: {
@@ -59,14 +79,35 @@ serve(async (req) => {
       );
     }
 
+    // Get SMTP credentials from environment variables
+    const smtpHost = Deno.env.get('SMTP_HOST');
+    const smtpPort = Deno.env.get('SMTP_PORT');
+    const smtpUser = Deno.env.get('SMTP_USER');
+    const smtpPass = Deno.env.get('SMTP_PASS');
+
+    // Validate SMTP configuration
+    if (!smtpHost || !smtpPort || !smtpUser || !smtpPass) {
+      console.error('Missing SMTP configuration');
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error' }),
+        {
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+    }
+
     // Create SMTP client
     const smtp = new SmtpClient({
-      host: Deno.env.get('SMTP_HOST'),
-      port: Number(Deno.env.get('SMTP_PORT')),
+      host: smtpHost,
+      port: Number(smtpPort),
       secure: true,
       auth: {
-        user: Deno.env.get('SMTP_USER'),
-        pass: Deno.env.get('SMTP_PASS'),
+        user: smtpUser,
+        pass: smtpPass,
       },
     });
 
