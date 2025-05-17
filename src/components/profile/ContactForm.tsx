@@ -43,10 +43,15 @@ const ContactForm: React.FC<ContactFormProps> = ({ profileId, profileName }) => 
     handleSubmit,
     watch,
     reset,
+    setValue,
     formState: { errors, isSubmitting },
-  } = useForm<FormData>();
+  } = useForm<FormData>({
+    defaultValues: {
+      eventTypes: [],
+    }
+  });
 
-  const selectedEventTypes = watch('eventTypes', []);
+  const selectedEventTypes = watch('eventTypes') || [];
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -146,11 +151,13 @@ const ContactForm: React.FC<ContactFormProps> = ({ profileId, profileName }) => 
             <Checkbox
               key={type}
               label={type}
-              {...register('eventTypes', {
-                required: 'Please select at least one event type',
-              })}
-              value={type}
               checked={selectedEventTypes.includes(type)}
+              onChange={(e) => {
+                const newEventTypes = e.target.checked
+                  ? [...selectedEventTypes, type]
+                  : selectedEventTypes.filter((t) => t !== type);
+                setValue('eventTypes', newEventTypes, { shouldValidate: true });
+              }}
             />
           ))}
         </div>
