@@ -19,7 +19,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
-
 - name: Install Supabase CLI
   run: |
     curl -sL https://deb.nodesource.com/setup_18.x | sudo -E bash -
