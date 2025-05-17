@@ -24,7 +24,7 @@ serve(async (req) => {
   // Only allow POST
   if (req.method !== 'POST') {
     return new Response(
-      JSON.stringify({ error: 'Method not allowed' }), 
+      JSON.stringify({ error: 'Method not allowed' }),
       {
         status: 405,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -84,26 +84,4 @@ This message was sent through CostumeCameos. You can reply directly to this emai
         <h2>You have received a new message through CostumeCameos</h2>
         <p><strong>From:</strong> ${senderName} (${senderEmail})</p>
         <div style="margin: 20px 0; padding: 20px; background: #f5f5f5; border-radius: 5px;">
-          ${message.replace(/\n/g, '<br>')}
-        </div>
-        <p style="color: #666; font-size: 0.9em;">
-          This message was sent through CostumeCameos. You can reply directly to this email to contact ${senderName}.
-        </p>
-      `,
-    });
-
-    return new Response(
-      JSON.stringify({ success: true }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  } catch (error) {
-    console.error('Error sending email:', error);
-    return new Response(
-      JSON.stringify({ error: error.message || 'Failed to send email' }),
-      { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
-  }
-});
+          ${message.replace(/\n
