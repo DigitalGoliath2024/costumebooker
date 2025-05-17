@@ -6,12 +6,14 @@ import LocationFilter from '../components/profile/LocationFilter';
 import CategoryFilter from '../components/profile/CategoryFilter';
 import { supabase } from '../lib/supabase';
 import { STATES, type Profile } from '../types';
+import toast from 'react-hot-toast';
 
 const BrowsePage: React.FC = () => {
   const { stateAbbr } = useParams<{ stateAbbr?: string }>();
   
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedState, setSelectedState] = useState(stateAbbr || '');
   const [selectedCity, setSelectedCity] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -20,6 +22,7 @@ const BrowsePage: React.FC = () => {
     const fetchProfiles = async () => {
       try {
         setLoading(true);
+        setError(null);
         
         let query = supabase
           .from('profiles')
@@ -52,9 +55,16 @@ const BrowsePage: React.FC = () => {
           query = query.eq('city', selectedCity);
         }
 
-        const { data, error } = await query;
+        const { data, error: fetchError } = await query;
 
-        if (error) throw error;
+        if (fetchError) throw fetchError;
+
+        if (!data) {
+          setProfiles([]);
+          return;
+        }
+
+        console.log('Fetched profiles:', data.length);
 
         const mappedProfiles: Profile[] = data.map(item => ({
           id: item.id,
@@ -89,9 +99,12 @@ const BrowsePage: React.FC = () => {
           );
         }
 
+        console.log('Filtered profiles:', filteredProfiles.length);
         setProfiles(filteredProfiles);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching profiles:', error);
+        setError(error.message);
+        toast.error('Failed to load profiles');
       } finally {
         setLoading(false);
       }
@@ -153,6 +166,10 @@ const BrowsePage: React.FC = () => {
               {loading ? (
                 <div className="text-center py-12">
                   <p className="text-gray-500">Loading profiles...</p>
+                </div>
+              ) : error ? (
+                <div className="text-center py-12">
+                  <p className="text-red-500">{error}</p>
                 </div>
               ) : (
                 <>
