@@ -1,5 +1,6 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { SmtpClient } from "npm:emailjs-smtp-client@2.0.1";
+import { createClient } from 'npm:@supabase/supabase-js@2.39.3';
+import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
+import { SMTPClient } from 'npm:smtp-client@0.4.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,7 +12,7 @@ const corsHeaders = {
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response('OK', {
+    return new Response('OK', { 
       status: 200,
       headers: corsHeaders
     });
@@ -44,18 +45,38 @@ serve(async (req) => {
       });
     }
 
-    // Set up SMTP client
-    const client = new SmtpClient(
-      Deno.env.get('SMTP_HOST') || '',
-      Number(Deno.env.get('SMTP_PORT')) || 587,
+    // Store the message in the database first
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       {
         auth: {
-          user: Deno.env.get('SMTP_USER') || '',
-          pass: Deno.env.get('SMTP_PASS') || '',
-        },
-        useSecureTransport: true,
+          persistSession: false,
+        }
       }
     );
+
+    const { error: dbError } = await supabaseClient
+      .from('contact_messages')
+      .insert({
+        sender_name: senderName,
+        sender_email: senderEmail,
+        message: message,
+        profile_id: recipientEmail, // This will be linked to the profile's ID
+      });
+
+    if (dbError) {
+      throw new Error('Failed to store message in database');
+    }
+
+    // Set up SMTP client
+    const client = new SMTPClient({
+      host: Deno.env.get('SMTP_HOST') || '',
+      port: Number(Deno.env.get('SMTP_PORT')) || 587,
+      username: Deno.env.get('SMTP_USER') || '',
+      password: Deno.env.get('SMTP_PASS') || '',
+      secure: true,
+    });
 
     const emailContent = `From: "CostumeCameos" <noreply@costumecameos.com>
 Reply-To: ${senderEmail}
@@ -87,7 +108,10 @@ This message was sent through CostumeCameos. You can reply directly to this emai
     });
   } catch (error) {
     console.error('Error sending email:', error);
-    return new Response(JSON.stringify({ error: 'Failed to send email', details: error.message }), {
+    return new Response(JSON.stringify({ 
+      error: 'Failed to send email', 
+      details: error.message 
+    }), {
       status: 500,
       headers: corsHeaders,
     });

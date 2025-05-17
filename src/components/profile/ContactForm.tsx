@@ -38,12 +38,19 @@ const ContactForm: React.FC<ContactFormProps> = ({ profileId, profileName, conta
         body: JSON.stringify({
           ...data,
           recipientEmail: contactEmail,
+          profileId: profileId,
         }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || errorData.details || 'Failed to send message');
+        let errorMessage = 'Failed to send message';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.details || errorMessage;
+        } catch {
+          // If parsing JSON fails, use the default error message
+        }
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
