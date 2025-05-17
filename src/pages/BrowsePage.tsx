@@ -56,7 +56,7 @@ const BrowsePage: React.FC = () => {
 
         if (error) throw error;
 
-        let filteredProfiles = data.map((item: any) => ({
+        const mappedProfiles: Profile[] = data.map(item => ({
           id: item.id,
           displayName: item.display_name,
           bio: item.bio,
@@ -80,8 +80,9 @@ const BrowsePage: React.FC = () => {
         }));
 
         // Filter by categories if any are selected
+        let filteredProfiles = mappedProfiles;
         if (selectedCategories.length > 0) {
-          filteredProfiles = filteredProfiles.filter((profile) =>
+          filteredProfiles = mappedProfiles.filter((profile) =>
             profile.categories.some((category) =>
               selectedCategories.includes(category)
             )
