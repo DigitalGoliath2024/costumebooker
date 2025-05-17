@@ -1,69 +1,95 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import Input from '../ui/Input';
 import Textarea from '../ui/Textarea';
+import Checkbox from '../ui/Checkbox';
 import Button from '../ui/Button';
 import toast from 'react-hot-toast';
 
 type ContactFormProps = {
   profileId: string;
   profileName: string;
-  contactEmail: string;
 };
 
 type FormData = {
   senderName: string;
   senderEmail: string;
+  phoneNumber: string;
+  address: string;
   message: string;
+  eventTypes: string[];
+  captchaAnswer: string;
 };
 
-const ContactForm: React.FC<ContactFormProps> = ({ profileId, profileName, contactEmail }) => {
+const EVENT_TYPES = [
+  'Birthday Party',
+  'Corporate Event',
+  'Private Booking',
+  'Convention Appearance',
+  'School Event',
+  'Photo Shoot',
+  'Meet and Greet',
+];
+
+const ContactForm: React.FC<ContactFormProps> = ({ profileId, profileName }) => {
+  const [captchaNumbers, setCaptchaNumbers] = useState(() => {
+    const num1 = Math.floor(Math.random() * 9) + 1;
+    const num2 = Math.floor(Math.random() * 9) + 1;
+    return { num1, num2, sum: num1 + num2 };
+  });
+
   const {
     register,
     handleSubmit,
+    watch,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<FormData>();
 
+  const selectedEventTypes = watch('eventTypes', []);
+
   const onSubmit = async (data: FormData) => {
     try {
-      const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-contact-email`;
-      
-      const response = await fetch(functionUrl, {
+      // Validate captcha
+      if (parseInt(data.captchaAnswer) !== captchaNumbers.sum) {
+        toast.error('Incorrect captcha answer');
+        return;
+      }
+
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/contact_messages`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          'Prefer': 'return=minimal',
         },
         body: JSON.stringify({
-          ...data,
-          recipientEmail: contactEmail,
-          profileId: profileId,
+          profile_id: profileId,
+          sender_name: data.senderName,
+          sender_email: data.senderEmail,
+          phone_number: data.phoneNumber,
+          address: data.address,
+          message: data.message,
+          event_type: data.eventTypes,
+          captcha_answer: parseInt(data.captchaAnswer),
         }),
       });
 
       if (!response.ok) {
-        let errorMessage = 'Failed to send message';
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.error || errorData.details || errorMessage;
-        } catch {
-          // If parsing JSON fails, use the default error message
-        }
-        throw new Error(errorMessage);
+        throw new Error('Failed to submit inquiry');
       }
 
-      const result = await response.json();
-
-      if (result.success) {
-        toast.success('Message sent successfully!');
-        reset();
-      } else {
-        throw new Error('Failed to send message');
-      }
+      toast.success('Inquiry submitted successfully!');
+      reset();
+      
+      // Generate new captcha numbers
+      const num1 = Math.floor(Math.random() * 9) + 1;
+      const num2 = Math.floor(Math.random() * 9) + 1;
+      setCaptchaNumbers({ num1, num2, sum: num1 + num2 });
     } catch (error: any) {
-      console.error('Error sending message:', error);
-      toast.error(error.message || 'Failed to send message. Please try again.');
+      console.error('Error submitting inquiry:', error);
+      toast.error(error.message || 'Failed to submit inquiry');
     }
   };
 
@@ -72,13 +98,15 @@ const ContactForm: React.FC<ContactFormProps> = ({ profileId, profileName, conta
       <h3 className="text-lg font-medium text-gray-900">
         Contact {profileName}
       </h3>
+      
       <Input
         label="Your Name"
         {...register('senderName', { required: 'Name is required' })}
         error={errors.senderName?.message}
       />
+      
       <Input
-        label="Your Email"
+        label="Email Address"
         type="email"
         {...register('senderEmail', {
           required: 'Email is required',
@@ -89,25 +117,82 @@ const ContactForm: React.FC<ContactFormProps> = ({ profileId, profileName, conta
         })}
         error={errors.senderEmail?.message}
       />
+      
+      <Input
+        label="Phone Number"
+        type="tel"
+        {...register('phoneNumber', {
+          required: 'Phone number is required',
+          pattern: {
+            value: /^\+?[\d\s-()]+$/,
+            message: 'Invalid phone number',
+          },
+        })}
+        error={errors.phoneNumber?.message}
+      />
+      
+      <Input
+        label="Address"
+        {...register('address', { required: 'Address is required' })}
+        error={errors.address?.message}
+      />
+
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">
+          Event Type (select all that apply)
+        </label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {EVENT_TYPES.map((type) => (
+            <Checkbox
+              key={type}
+              label={type}
+              {...register('eventTypes', {
+                required: 'Please select at least one event type',
+              })}
+              value={type}
+              checked={selectedEventTypes.includes(type)}
+            />
+          ))}
+        </div>
+        {errors.eventTypes && (
+          <p className="text-sm text-red-500">{errors.eventTypes.message}</p>
+        )}
+      </div>
+
       <Textarea
-        label="Message"
+        label="Message (max 500 characters)"
         {...register('message', {
           required: 'Message is required',
-          minLength: {
-            value: 10,
-            message: 'Message must be at least 10 characters',
+          maxLength: {
+            value: 500,
+            message: 'Message cannot exceed 500 characters',
           },
         })}
         error={errors.message?.message}
-        rows={5}
+        rows={4}
       />
+
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Please solve this math problem: {captchaNumbers.num1} + {captchaNumbers.num2} = ?
+        </label>
+        <Input
+          type="number"
+          {...register('captchaAnswer', {
+            required: 'Please answer the math problem',
+          })}
+          error={errors.captchaAnswer?.message}
+        />
+      </div>
+
       <div className="pt-2">
         <Button type="submit" disabled={isSubmitting} className="w-full">
-          {isSubmitting ? 'Sending...' : 'Send Message'}
+          {isSubmitting ? 'Submitting...' : 'Send Inquiry'}
         </Button>
       </div>
+
       <p className="text-xs text-gray-500 mt-2">
-        Your message will be sent directly to the performer's email. They will be able to reply to you directly.
+        Your inquiry will be sent directly to the performer. They will contact you using the provided information.
       </p>
     </form>
   );
