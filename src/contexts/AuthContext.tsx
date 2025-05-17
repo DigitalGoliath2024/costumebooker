@@ -23,15 +23,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const clearAuthState = () => {
+    localStorage.clear(); // Clear all local storage including any stored tokens
+    setUser(null);
+    setSession(null);
+  };
+
   useEffect(() => {
     const checkSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (error || !session) {
-          // Clear auth state if there's an error or no session
-          setUser(null);
-          setSession(null);
+        if (error) {
+          console.error('Session error:', error);
+          clearAuthState();
+          return;
+        }
+
+        if (!session) {
+          clearAuthState();
           return;
         }
 
@@ -44,9 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } catch (error) {
         console.error('Error checking session:', error);
-        // Clear auth state on error
-        setUser(null);
-        setSession(null);
+        clearAuthState();
       } finally {
         setLoading(false);
       }
@@ -55,7 +63,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (_event, session) => {
         if (session?.user) {
           setUser({
             id: session.user.id,
@@ -63,8 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           });
           setSession(session);
         } else {
-          setUser(null);
-          setSession(null);
+          clearAuthState();
         }
         setLoading(false);
       }
@@ -99,20 +106,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
-      // Clear local auth state first
-      setUser(null);
-      setSession(null);
+      clearAuthState(); // Clear local state first
 
-      // Then attempt to sign out from Supabase
       const { error } = await supabase.auth.signOut();
       
       if (error) {
         console.error('Error during sign out:', error);
-        // Error is not thrown since we already cleared local state
       }
     } catch (error) {
       console.error('Unexpected error during sign out:', error);
-      // Error is not thrown since we already cleared local state
     }
   };
 
