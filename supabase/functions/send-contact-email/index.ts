@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import nodemailer from "https://esm.sh/nodemailer@6.9.18";
+import { SMTPClient } from "npm:smtp-client@0.4.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -54,39 +54,27 @@ serve(async (req) => {
       );
     }
 
-    // Create SMTP transport with more flexible configuration
-    const smtp = nodemailer.createTransport({
-      host: Deno.env.get('SMTP_HOST'),
+    const smtp = new SMTPClient({
+      host: Deno.env.get('SMTP_HOST') || '',
       port: Number(Deno.env.get('SMTP_PORT')) || 587,
-      secure: Number(Deno.env.get('SMTP_PORT')) === 465, // Only use secure for port 465
-      auth: {
-        user: Deno.env.get('SMTP_USER'),
-        pass: Deno.env.get('SMTP_PASS'),
-      },
-      tls: {
-        rejectUnauthorized: false // Allow self-signed certificates
-      }
+      secure: Number(Deno.env.get('SMTP_PORT')) === 465,
+      username: Deno.env.get('SMTP_USER') || '',
+      password: Deno.env.get('SMTP_PASS') || '',
     });
 
-    // Send email with HTML format
-    await smtp.sendMail({
-      from: `"CostumeCameos" <noreply@costumecameos.com>`,
-      to: recipientEmail,
-      replyTo: senderEmail,
-      subject: `New Message from ${senderName} via CostumeCameos`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #4a5568;">New Contact Message</h2>
-          <p style="color: #718096;"><strong>From:</strong> ${senderName} (${senderEmail})</p>
-          <div style="background-color: #f7fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <p style="color: #4a5568; white-space: pre-wrap;">${message}</p>
-          </div>
-          <p style="color: #718096; font-size: 14px;">
-            This message was sent through CostumeCameos. You can reply directly to this email to respond to ${senderName}.
-          </p>
-        </div>
-      `,
-      text: `
+    // Connect to SMTP server
+    await smtp.connect();
+    
+    // Send email
+    await smtp.mail({ from: 'noreply@costumecameos.com' });
+    await smtp.rcpt({ to: recipientEmail });
+    
+    const emailContent = `From: "CostumeCameos" <noreply@costumecameos.com>
+Reply-To: ${senderEmail}
+To: ${recipientEmail}
+Subject: New Message from ${senderName} via CostumeCameos
+Content-Type: text/plain; charset=utf-8
+
 New Contact Message
 
 From: ${senderName} (${senderEmail})
@@ -94,9 +82,10 @@ From: ${senderName} (${senderEmail})
 Message:
 ${message}
 
-This message was sent through CostumeCameos. You can reply directly to this email to respond to ${senderName}.
-      `.trim(),
-    });
+This message was sent through CostumeCameos. You can reply directly to this email to respond to ${senderName}.`;
+
+    await smtp.data(emailContent);
+    await smtp.quit();
 
     return new Response(
       JSON.stringify({ success: true }), 
