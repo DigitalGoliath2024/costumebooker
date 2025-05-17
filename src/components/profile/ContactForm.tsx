@@ -39,20 +39,15 @@ const ContactForm: React.FC<ContactFormProps> = ({ profileId, profileName, conta
         }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to send message');
-      }
-
       const result = await response.json();
-      
-      if (result.success) {
-        toast.success('Message sent successfully!');
-        reset();
-      } else {
+
+      if (!response.ok) {
         throw new Error(result.error || 'Failed to send message');
       }
-    } catch (error) {
+
+      toast.success('Message sent successfully!');
+      reset();
+    } catch (error: any) {
       console.error('Error sending message:', error);
       toast.error(error.message || 'Failed to send message. Please try again.');
     }

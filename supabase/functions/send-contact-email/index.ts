@@ -1,9 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { SmtpClient } from "npm:nodemailer";
 
-// Define CORS headers that work for both development and production
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*', // Allow all origins in development
+  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Max-Age': '86400',
@@ -11,7 +10,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       status: 204,
@@ -25,10 +24,7 @@ serve(async (req) => {
       JSON.stringify({ error: 'Method not allowed' }), 
       {
         status: 405,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }
@@ -39,21 +35,10 @@ serve(async (req) => {
     // Validate required fields
     if (!senderName || !senderEmail || !message || !recipientEmail) {
       return new Response(
-        JSON.stringify({ 
-          error: 'Missing required fields',
-          details: {
-            senderName: !senderName,
-            senderEmail: !senderEmail,
-            message: !message,
-            recipientEmail: !recipientEmail
-          }
-        }),
+        JSON.stringify({ error: 'Missing required fields' }),
         {
           status: 400,
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json'
-          }
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
@@ -62,52 +47,22 @@ serve(async (req) => {
     const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
     if (!emailRegex.test(senderEmail) || !emailRegex.test(recipientEmail)) {
       return new Response(
-        JSON.stringify({ 
-          error: 'Invalid email format',
-          details: {
-            senderEmail: !emailRegex.test(senderEmail),
-            recipientEmail: !emailRegex.test(recipientEmail)
-          }
-        }),
+        JSON.stringify({ error: 'Invalid email format' }),
         {
           status: 400,
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-    }
-
-    // Get SMTP credentials from environment variables
-    const smtpHost = Deno.env.get('SMTP_HOST');
-    const smtpPort = Deno.env.get('SMTP_PORT');
-    const smtpUser = Deno.env.get('SMTP_USER');
-    const smtpPass = Deno.env.get('SMTP_PASS');
-
-    // Validate SMTP configuration
-    if (!smtpHost || !smtpPort || !smtpUser || !smtpPass) {
-      console.error('Missing SMTP configuration');
-      return new Response(
-        JSON.stringify({ error: 'Server configuration error' }),
-        {
-          status: 500,
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json'
-          }
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
 
     // Create SMTP client
     const smtp = new SmtpClient({
-      host: smtpHost,
-      port: Number(smtpPort),
+      host: Deno.env.get('SMTP_HOST'),
+      port: Number(Deno.env.get('SMTP_PORT')),
       secure: true,
       auth: {
-        user: smtpUser,
-        pass: smtpPass,
+        user: Deno.env.get('SMTP_USER'),
+        pass: Deno.env.get('SMTP_PASS'),
       },
     });
 
@@ -140,27 +95,15 @@ This message was sent through CostumeCameos. You can reply directly to this emai
 
     return new Response(
       JSON.stringify({ success: true }),
-      {
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
     console.error('Error sending email:', error);
-    
     return new Response(
-      JSON.stringify({ 
-        error: 'Failed to send email',
-        details: error.message 
-      }),
+      JSON.stringify({ error: 'Failed to send email' }),
       { 
         status: 500,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }
