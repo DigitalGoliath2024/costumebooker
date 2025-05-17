@@ -1,72 +1,144 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { Check, Shield } from 'lucide-react';
 import Layout from '../components/layout/Layout';
 import Button from '../components/ui/Button';
-import { Card, CardContent } from '../components/ui/Card';
+import { useAuth } from '../contexts/AuthContext';
+import { redirectToCheckout } from '../lib/stripe';
+import { STRIPE_PRODUCTS } from '../stripe-config';
 
 const ManageSubscriptionPage: React.FC = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubscribe = async () => {
+    if (!user) {
+      navigate('/signin?redirect=/dashboard/subscription');
+      return;
+    }
+
+    try {
+      await redirectToCheckout('YEARLY_MEMBERSHIP');
+    } catch (error: any) {
+      console.error('Error creating checkout session:', error);
+    }
+  };
+
+  const features = [
+    'Professional profile listing',
+    'Upload up to 4 high-quality images',
+    'Detailed bio and services description',
+    'Location-based visibility',
+    'Category-based search inclusion',
+    'Direct client inquiries',
+    'Social media links',
+    'Automatic yearly renewal',
+  ];
+
   return (
     <Layout>
       <div className="bg-gray-50 min-h-screen py-12">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-8">
-            <Link to="/dashboard" className="text-purple-700 hover:text-purple-800">
-              &larr; Back to Dashboard
-            </Link>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {user && (
+            <div className="mb-8">
+              <Link to="/dashboard" className="text-purple-700 hover:text-purple-800">
+                &larr; Back to Dashboard
+              </Link>
+            </div>
+          )}
+
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              Get Discovered by Clients
+            </h1>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Join our directory of talented performers and connect with clients looking for unique entertainment
+            </p>
           </div>
 
-          <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200">
-            <h1 className="text-3xl font-bold text-gray-900 mb-8">
-              Manage Subscription
-            </h1>
-            
-            <div className="space-y-8">
-              <div className="border-b border-gray-200 pb-8">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                  Subscription Status
-                </h2>
-                <Card>
-                  <CardContent className="p-6">
-                    <p className="text-gray-600">
-                      This page is under construction. Soon you'll be able to:
-                    </p>
-                    <ul className="mt-4 space-y-2 text-gray-600">
-                      <li>• View your current subscription status</li>
-                      <li>• Manage your payment method</li>
-                      <li>• View billing history</li>
-                      <li>• Cancel or renew your subscription</li>
-                    </ul>
-                  </CardContent>
-                </Card>
+          <div className="max-w-lg mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div className="bg-gradient-premium text-white p-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold">Yearly Membership</h2>
+                <div className="text-3xl font-bold">$29</div>
               </div>
+              <p className="text-white/90">
+                per year, billed annually
+              </p>
+            </div>
 
-              <div className="border-b border-gray-200 pb-8">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                  Subscription Details
-                </h2>
-                <div className="bg-gray-50 p-6 rounded-lg">
-                  <ul className="space-y-4">
-                    <li className="flex justify-between">
-                      <span className="text-gray-600">Price</span>
-                      <span className="font-medium text-gray-900">$29/year</span>
-                    </li>
-                    <li className="flex justify-between">
-                      <span className="text-gray-600">Renewal</span>
-                      <span className="font-medium text-gray-900">Automatic</span>
-                    </li>
-                    <li className="flex justify-between">
-                      <span className="text-gray-600">Refund Policy</span>
-                      <span className="font-medium text-gray-900">Non-refundable</span>
-                    </li>
-                  </ul>
+            <div className="p-8">
+              <ul className="space-y-4 mb-8">
+                {features.map((feature, index) => (
+                  <li key={index} className="flex items-start">
+                    <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                    <span className="text-gray-700">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <Button
+                onClick={handleSubscribe}
+                className="w-full mb-6"
+                size="lg"
+              >
+                {user ? 'Subscribe Now' : 'Sign In to Subscribe'}
+              </Button>
+
+              <div className="text-center">
+                <p className="text-sm text-gray-500 mb-4">
+                  Subscription renews automatically. Cancel anytime.
+                </p>
+                <div className="flex items-center justify-center text-sm text-gray-600">
+                  <Shield className="h-4 w-4 mr-2" />
+                  Secure payment processing by Stripe
                 </div>
               </div>
+            </div>
+          </div>
 
-              <div className="flex justify-between items-center">
-                <Link to="/dashboard">
-                  <Button variant="outline">Back to Dashboard</Button>
-                </Link>
-                <Button disabled>Update Subscription</Button>
+          <div className="mt-12 max-w-3xl mx-auto">
+            <div className="bg-white p-8 rounded-lg shadow-sm">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                Frequently Asked Questions
+              </h2>
+              
+              <div className="space-y-6">
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">
+                    What's included in my membership?
+                  </h3>
+                  <p className="text-gray-600">
+                    Your membership includes a professional profile listing with up to 4 images, detailed bio, pricing information, and direct client inquiries. You'll be discoverable through location and category searches.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">
+                    How do bookings and payments work?
+                  </h3>
+                  <p className="text-gray-600">
+                    We don't handle bookings or payments between performers and clients. We simply connect you with potential clients who can reach out through our platform. You manage your own bookings, rates, and payment arrangements directly with clients.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">
+                    Can I cancel my subscription?
+                  </h3>
+                  <p className="text-gray-600">
+                    Yes, you can cancel your subscription at any time. Your listing will remain active until the end of your current billing period. No refunds are provided for partial periods.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">
+                    What happens when my subscription renews?
+                  </h3>
+                  <p className="text-gray-600">
+                    Your subscription will automatically renew each year at $29. You'll receive a reminder email before renewal, and you can cancel anytime to prevent automatic renewal.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
