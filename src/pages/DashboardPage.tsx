@@ -138,7 +138,8 @@ const DashboardPage: React.FC = () => {
       const { error } = await supabase
         .from('contact_messages')
         .update({ is_read: true })
-        .eq('id', inquiryId);
+        .eq('id', inquiryId)
+        .eq('profile_id', user?.id);
 
       if (error) throw error;
 
@@ -161,11 +162,12 @@ const DashboardPage: React.FC = () => {
       const { error } = await supabase
         .from('contact_messages')
         .delete()
-        .eq('id', inquiryId);
+        .eq('id', inquiryId)
+        .eq('profile_id', user?.id);
 
       if (error) throw error;
 
-      setInquiries(inquiries.filter(inquiry => inquiry.id !== inquiryId));
+      setInquiries(prevInquiries => prevInquiries.filter(inquiry => inquiry.id !== inquiryId));
       if (selectedInquiry?.id === inquiryId) {
         setSelectedInquiry(null);
         setShowInquiryDetails(false);
