@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { MapPin, DollarSign, Facebook, Instagram, Twitter, Check, X } from 'lucide-react';
+import { MapPin, DollarSign, Facebook, Instagram, Twitter, Check, X, AlertTriangle } from 'lucide-react';
 import Layout from '../components/layout/Layout';
 import { Card, CardContent } from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
@@ -10,12 +10,14 @@ import ContactForm from '../components/profile/ContactForm';
 import { supabase } from '../lib/supabase';
 import { formatCurrency } from '../lib/utils';
 import { TRAVEL_RADIUS_OPTIONS } from '../types';
+import { useAuth } from '../contexts/AuthContext';
 import type { Profile } from '../types';
 
 const ProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -58,8 +60,6 @@ const ProfilePage: React.FC = () => {
             profile_images (id, image_url, position)
           `)
           .eq('id', id)
-          .eq('is_active', true)
-          .eq('payment_status', 'paid')
           .single();
 
         if (error) throw error;
@@ -143,6 +143,30 @@ const ProfilePage: React.FC = () => {
     );
   }
 
+  // Check if this is a preview for the profile owner
+  const isPreview = !profile.isActive && user?.id === profile.id;
+
+  // If not active and not the owner, show not found
+  if (!profile.isActive && !isPreview) {
+    return (
+      <Layout>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="text-center">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              Profile Not Found
+            </h2>
+            <p className="text-gray-500 mb-8">
+              This profile is not currently active.
+            </p>
+            <Link to="/browse">
+              <Button>Browse Other Performers</Button>
+            </Link>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   const travelRadiusLabel = TRAVEL_RADIUS_OPTIONS.find(
     option => option.value === profile.travelRadius
   )?.label;
@@ -151,10 +175,33 @@ const ProfilePage: React.FC = () => {
     <Layout>
       <div className="bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {isPreview && (
+            <div className="mb-6">
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                <div>
+                  <h3 className="font-medium text-yellow-800">Preview Mode</h3>
+                  <p className="text-yellow-700 mt-1">
+                    This is a preview of how your profile will appear to visitors. Your profile is not yet visible to the public.
+                    {profile.paymentStatus !== 'paid' && (
+                      <> To make your profile visible, <Link to="/dashboard/subscription" className="underline">activate your listing</Link>.</>
+                    )}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="mb-6">
-            <Link to="/browse" className="text-purple-700 hover:text-purple-800">
-              &larr; Back to Browse
-            </Link>
+            {isPreview ? (
+              <Link to="/dashboard" className="text-purple-700 hover:text-purple-800">
+                &larr; Back to Dashboard
+              </Link>
+            ) : (
+              <Link to="/browse" className="text-purple-700 hover:text-purple-800">
+                &larr; Back to Browse
+              </Link>
+            )}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
