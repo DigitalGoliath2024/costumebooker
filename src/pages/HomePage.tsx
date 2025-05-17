@@ -17,6 +17,7 @@ const HERO_IMAGES = [
 const HomePage: React.FC = () => {
   const [featuredProfiles, setFeaturedProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
@@ -33,8 +34,9 @@ const HomePage: React.FC = () => {
     const fetchFeaturedProfiles = async () => {
       try {
         setLoading(true);
+        setError(null);
         
-        const { data, error } = await supabase
+        const { data, error: supabaseError } = await supabase
           .from('profiles')
           .select(`
             id, 
@@ -58,34 +60,39 @@ const HomePage: React.FC = () => {
           .eq('payment_status', 'paid')
           .limit(8);
 
-        if (error) throw error;
+        if (supabaseError) {
+          throw supabaseError;
+        }
 
-        const profiles: Profile[] = data.map((item: any) => ({
-          id: item.id,
-          displayName: item.display_name,
-          bio: item.bio,
-          state: item.state,
-          city: item.city,
-          priceMin: item.price_min,
-          priceMax: item.price_max,
-          facebook: item.facebook,
-          instagram: item.instagram,
-          tiktok: item.tiktok,
-          twitter: item.twitter,
-          isActive: item.is_active,
-          paymentStatus: item.payment_status,
-          paymentExpiry: item.payment_expiry,
-          categories: item.profile_categories.map((c: any) => c.category),
-          images: item.profile_images.map((img: any) => ({
-            id: img.id,
-            url: img.image_url,
-            position: img.position,
-          })),
-        }));
-
-        setFeaturedProfiles(profiles);
-      } catch (error) {
-        console.error('Error fetching featured profiles:', error);
+        if (data) {
+          const profiles: Profile[] = data.map((item: any) => ({
+            id: item.id,
+            displayName: item.display_name,
+            bio: item.bio,
+            state: item.state,
+            city: item.city,
+            priceMin: item.price_min,
+            priceMax: item.price_max,
+            facebook: item.facebook,
+            instagram: item.instagram,
+            tiktok: item.tiktok,
+            twitter: item.twitter,
+            isActive: item.is_active,
+            paymentStatus: item.payment_status,
+            paymentExpiry: item.payment_expiry,
+            categories: item.profile_categories.map((c: any) => c.category),
+            images: item.profile_images.map((img: any) => ({
+              id: img.id,
+              url: img.image_url,
+              position: img.position,
+            })),
+          }));
+          setFeaturedProfiles(profiles);
+        }
+      } catch (err: any) {
+        console.error('Error fetching featured profiles:', err);
+        setError(err.message || 'Failed to fetch profiles');
+        setFeaturedProfiles([]);
       } finally {
         setLoading(false);
       }
@@ -279,6 +286,10 @@ const HomePage: React.FC = () => {
           {loading ? (
             <div className="text-center py-12">
               <p className="text-accent-500">Loading featured performers...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <p className="text-red-500">{error}</p>
             </div>
           ) : (
             <ProfileGrid profiles={displayProfiles} />
