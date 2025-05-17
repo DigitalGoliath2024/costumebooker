@@ -1,13 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Edit, Image, DollarSign, User, LogOut, Eye, Shield } from 'lucide-react';
+import { Edit, Image, DollarSign, User, LogOut, Eye, Shield, Trash2, Check } from 'lucide-react';
 import Layout from '../components/layout/Layout';
 import Button from '../components/ui/Button';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '../components/ui/Card';
+import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import toast from 'react-hot-toast';
 import type { Profile } from '../types';
+
+type Inquiry = {
+  id: string;
+  created_at: string;
+  sender_name: string;
+  sender_email: string;
+  message: string;
+  is_read: boolean;
+  event_type: string[];
+  phone_number: string;
+  address: string;
+};
 
 const DashboardPage: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -15,7 +28,9 @@ const DashboardPage: React.FC = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [inquiries, setInquiries] = useState<any[]>([]);
+  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
+  const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
+  const [showInquiryDetails, setShowInquiryDetails] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -23,7 +38,7 @@ const DashboardPage: React.FC = () => {
       return;
     }
 
-    const fetchProfile = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         
@@ -40,7 +55,7 @@ const DashboardPage: React.FC = () => {
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select(`
-            id, 
+            id,
             display_name,
             bio,
             state,
@@ -87,26 +102,26 @@ const DashboardPage: React.FC = () => {
               position: img.position,
             })),
           });
+
+          // Fetch inquiries
+          const { data: inquiriesData, error: inquiriesError } = await supabase
+            .from('contact_messages')
+            .select('*')
+            .eq('profile_id', user.id)
+            .order('created_at', { ascending: false });
+
+          if (inquiriesError) throw inquiriesError;
+          setInquiries(inquiriesData || []);
         }
-
-        // Fetch inquiries
-        const { data: inquiriesData, error: inquiriesError } = await supabase
-          .from('contact_messages')
-          .select('*')
-          .eq('profile_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (inquiriesError) throw inquiriesError;
-        setInquiries(inquiriesData || []);
-
       } catch (error) {
         console.error('Error fetching data:', error);
+        toast.error('Failed to load data');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProfile();
+    fetchData();
   }, [user, navigate]);
 
   const handleSignOut = async () => {
@@ -117,6 +132,54 @@ const DashboardPage: React.FC = () => {
       console.error('Error signing out:', error);
     }
   };
+
+  const handleMarkAsRead = async (inquiryId: string) => {
+    try {
+      const { error } = await supabase
+        .from('contact_messages')
+        .update({ is_read: true })
+        .eq('id', inquiryId);
+
+      if (error) throw error;
+
+      setInquiries(inquiries.map(inquiry =>
+        inquiry.id === inquiryId ? { ...inquiry, is_read: true } : inquiry
+      ));
+      toast.success('Marked as read');
+    } catch (error) {
+      console.error('Error marking inquiry as read:', error);
+      toast.error('Failed to mark as read');
+    }
+  };
+
+  const handleDeleteInquiry = async (inquiryId: string) => {
+    if (!window.confirm('Are you sure you want to delete this inquiry?')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('contact_messages')
+        .delete()
+        .eq('id', inquiryId);
+
+      if (error) throw error;
+
+      setInquiries(inquiries.filter(inquiry => inquiry.id !== inquiryId));
+      if (selectedInquiry?.id === inquiryId) {
+        setSelectedInquiry(null);
+        setShowInquiryDetails(false);
+      }
+      toast.success('Inquiry deleted');
+    } catch (error) {
+      console.error('Error deleting inquiry:', error);
+      toast.error('Failed to delete inquiry');
+    }
+  };
+
+  const hasProfile = !!profile;
+  const isProfileComplete = hasProfile && profile.displayName && profile.bio && profile.state && profile.city;
+  const isPaid = profile?.paymentStatus === 'paid';
 
   if (loading) {
     return (
@@ -129,10 +192,6 @@ const DashboardPage: React.FC = () => {
       </Layout>
     );
   }
-
-  const hasProfile = !!profile;
-  const isProfileComplete = hasProfile && profile.displayName && profile.bio && profile.state && profile.city;
-  const isPaid = profile?.paymentStatus === 'paid';
 
   return (
     <Layout>
@@ -192,11 +251,6 @@ const DashboardPage: React.FC = () => {
                     )}
                   </div>
                 </CardContent>
-                <CardFooter>
-                  <Button variant="outline" className="w-full">
-                    Change Password
-                  </Button>
-                </CardFooter>
               </Card>
 
               {/* Quick Links */}
@@ -221,13 +275,6 @@ const DashboardPage: React.FC = () => {
                       Manage Images
                     </Link>
                     <Link
-                      to="/dashboard/preview"
-                      className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-purple-700 hover:bg-purple-50"
-                    >
-                      <Eye className="mr-3 h-5 w-5 text-purple-500" />
-                      Preview Profile
-                    </Link>
-                    <Link
                       to="/dashboard/subscription"
                       className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-purple-700 hover:bg-purple-50"
                     >
@@ -250,6 +297,7 @@ const DashboardPage: React.FC = () => {
 
             {/* Right Column - Profile Status & Inquiries */}
             <div className="lg:col-span-2">
+              {/* Profile Status Card */}
               <Card>
                 <CardHeader>
                   <CardTitle>Profile Status</CardTitle>
@@ -378,73 +426,180 @@ const DashboardPage: React.FC = () => {
                 </CardContent>
               </Card>
 
-              {/* Recent Inquiries */}
+              {/* Inquiries Card */}
               {hasProfile && (
                 <Card className="mt-6">
                   <CardHeader>
-                    <CardTitle>Recent Inquiries</CardTitle>
+                    <CardTitle>Inquiries</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {inquiries.length === 0 ? (
-                      <div className="text-center py-6">
-                        <p className="text-gray-500">No inquiries yet</p>
+                    {showInquiryDetails && selectedInquiry ? (
+                      <div className="space-y-6">
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setShowInquiryDetails(false);
+                            setSelectedInquiry(null);
+                          }}
+                          className="mb-4"
+                        >
+                          Back to List
+                        </Button>
+                        
+                        <div className="bg-gray-50 p-6 rounded-lg">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div>
+                              <h4 className="text-sm font-medium text-gray-500">From</h4>
+                              <p className="text-gray-900">{selectedInquiry.sender_name}</p>
+                              <p className="text-gray-600">{selectedInquiry.sender_email}</p>
+                            </div>
+                            <div>
+                              <h4 className="text-sm font-medium text-gray-500">Contact Info</h4>
+                              <p className="text-gray-900">{selectedInquiry.phone_number}</p>
+                              <p className="text-gray-600">{selectedInquiry.address}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="mb-6">
+                            <h4 className="text-sm font-medium text-gray-500 mb-2">Event Types</h4>
+                            <div className="flex flex-wrap gap-2">
+                              {selectedInquiry.event_type.map((type) => (
+                                <Badge key={type} variant="secondary">
+                                  {type}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <h4 className="text-sm font-medium text-gray-500 mb-2">Message</h4>
+                            <div className="bg-white p-4 rounded-md border border-gray-200">
+                              <p className="text-gray-900 whitespace-pre-wrap">{selectedInquiry.message}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between">
+                          {!selectedInquiry.is_read && (
+                            <Button
+                              onClick={() => handleMarkAsRead(selectedInquiry.id)}
+                              className="flex items-center"
+                            >
+                              <Check className="mr-2 h-4 w-4" />
+                              Mark as Read
+                            </Button>
+                          )}
+                          <Button
+                            variant="outline"
+                            onClick={() => handleDeleteInquiry(selectedInquiry.id)}
+                            className="flex items-center text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </Button>
+                        </div>
                       </div>
                     ) : (
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead>
-                            <tr>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Date
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Name
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Event Type
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Status
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {inquiries.map((inquiry) => (
-                              <tr key={inquiry.id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  {new Date(inquiry.created_at).toLocaleDateString()}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="text-sm font-medium text-gray-900">
-                                    {inquiry.sender_name}
-                                  </div>
-                                  <div className="text-sm text-gray-500">
-                                    {inquiry.sender_email}
-                                  </div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="flex flex-wrap gap-1">
-                                    {inquiry.event_type.map((type: string) => (
-                                      <span key={type} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                        {type}
-                                      </span>
-                                    ))}
-                                  </div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                    inquiry.is_read
-                                      ? 'bg-green-100 text-green-800'
-                                      : 'bg-yellow-100 text-yellow-800'
-                                  }`}>
-                                    {inquiry.is_read ? 'Read' : 'Unread'}
-                                  </span>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+                      <>
+                        {inquiries.length === 0 ? (
+                          <div className="text-center py-6">
+                            <p className="text-gray-500">No inquiries yet</p>
+                          </div>
+                        ) : (
+                          <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                              <thead className="bg-gray-50">
+                                <tr>
+                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Date
+                                  </th>
+                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    From
+                                  </th>
+                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Event Types
+                                  </th>
+                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Status
+                                  </th>
+                                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Actions
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody className="bg-white divide-y divide-gray-200">
+                                {inquiries.map((inquiry) => (
+                                  <tr
+                                    key={inquiry.id}
+                                    className={`hover:bg-gray-50 ${!inquiry.is_read ? 'bg-blue-50' : ''}`}
+                                  >
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                      {new Date(inquiry.created_at).toLocaleDateString()}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                      <div className="text-sm font-medium text-gray-900">
+                                        {inquiry.sender_name}
+                                      </div>
+                                      <div className="text-sm text-gray-500">
+                                        {inquiry.sender_email}
+                                      </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                      <div className="flex flex-wrap gap-1">
+                                        {inquiry.event_type.map((type) => (
+                                          <Badge key={type} variant="secondary">
+                                            {type}
+                                          </Badge>
+                                        ))}
+                                      </div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                      <Badge
+                                        variant={inquiry.is_read ? 'success' : 'warning'}
+                                      >
+                                        {inquiry.is_read ? 'Read' : 'Unread'}
+                                      </Badge>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                      <div className="flex justify-end space-x-2">
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => {
+                                            setSelectedInquiry(inquiry);
+                                            setShowInquiryDetails(true);
+                                          }}
+                                          className="text-purple-600 hover:text-purple-700"
+                                        >
+                                          <Eye className="h-4 w-4" />
+                                        </Button>
+                                        {!inquiry.is_read && (
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleMarkAsRead(inquiry.id)}
+                                            className="text-green-600 hover:text-green-700"
+                                          >
+                                            <Check className="h-4 w-4" />
+                                          </Button>
+                                        )}
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => handleDeleteInquiry(inquiry.id)}
+                                          className="text-red-600 hover:text-red-700"
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </>
                     )}
                   </CardContent>
                 </Card>
