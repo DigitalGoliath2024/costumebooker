@@ -146,8 +146,8 @@ const ProfilePage: React.FC = () => {
   // Check if this is a preview for the profile owner
   const isPreview = !profile.isActive && user?.id === profile.id;
 
-  // If not active and not the owner, show not found
-  if (!profile.isActive && !isPreview) {
+  // If not active/paid and not the owner, show not found
+  if (!isPreview && (!profile.isActive || profile.paymentStatus !== 'paid')) {
     return (
       <Layout>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -416,7 +416,6 @@ const ProfilePage: React.FC = () => {
                   <ContactForm 
                     profileId={profile.id} 
                     profileName={profile.displayName}
-                    contactEmail={profile.contactEmail}
                   />
                 </CardContent>
               </Card>
