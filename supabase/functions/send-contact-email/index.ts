@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { SmtpClient } from "npm:nodemailer";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*', // Use '*' while testing — tighten later
+  'Access-Control-Allow-Origin': '*', // Change to 'https://costumecameos.com' when ready
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': '*',
 };
@@ -51,4 +51,9 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error('Email send error:', error);
-    return new Response(JSON.strin
+    return new Response(JSON.stringify({ error: 'Failed to send email' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+});
