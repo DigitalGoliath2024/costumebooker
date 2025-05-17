@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Search, MapPin, Tag } from 'lucide-react';
 import Layout from '../components/layout/Layout';
 import Button from '../components/ui/Button';
 import ProfileGrid from '../components/profile/ProfileGrid';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
+import { redirectToCheckout } from '../lib/stripe';
 import { STATES, type Profile } from '../types';
 
 const HERO_IMAGES = [
@@ -15,6 +17,8 @@ const HERO_IMAGES = [
 ];
 
 const HomePage: React.FC = () => {
+  const { user, session } = useAuth();
+  const navigate = useNavigate();
   const [featuredProfiles, setFeaturedProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -100,6 +104,25 @@ const HomePage: React.FC = () => {
 
     fetchFeaturedProfiles();
   }, []);
+
+  const handleSubscribe = async () => {
+    try {
+      if (!session?.access_token) {
+        navigate('/signin', { 
+          state: { 
+            redirect: '/dashboard/subscription',
+            message: 'Please sign in to continue with your subscription.' 
+          }
+        });
+        return;
+      }
+
+      await redirectToCheckout('YEARLY_MEMBERSHIP', session.access_token);
+    } catch (error: any) {
+      console.error('Error creating checkout session:', error);
+      toast.error(error.message || 'Failed to start checkout process');
+    }
+  };
 
   // For demo purposes, using placeholder data
   const placeholderProfiles: Profile[] = [
@@ -395,11 +418,13 @@ const HomePage: React.FC = () => {
             <p className="text-xl mb-8 max-w-3xl mx-auto text-white/90">
               Join our directory to connect with fans and event organizers. Create your listing today for just $29 per year.
             </p>
-            <Link to="/signup">
-              <Button size="lg" variant="secondary">
-                Create Your Listing
-              </Button>
-            </Link>
+            <Button 
+              size="lg" 
+              variant="secondary"
+              onClick={handleSubscribe}
+            >
+              Create Your Listing
+            </Button>
           </div>
         </div>
       </section>
