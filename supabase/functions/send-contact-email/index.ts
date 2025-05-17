@@ -55,14 +55,22 @@ serve(async (req) => {
       );
     }
 
+    // Log environment variables (for debugging)
+    console.log('SMTP Configuration:', {
+      host: Deno.env.get('SMTP_HOST'),
+      port: Deno.env.get('SMTP_PORT'),
+      user: 'SMTP_USER exists: ' + !!Deno.env.get('SMTP_USER'),
+      pass: 'SMTP_PASS exists: ' + !!Deno.env.get('SMTP_PASS')
+    });
+
     // Create SMTP client
     const smtp = new SmtpClient({
-      host: Deno.env.get('SMTP_HOST'),
-      port: Number(Deno.env.get('SMTP_PORT')),
+      host: Deno.env.get('SMTP_HOST') || '',
+      port: Number(Deno.env.get('SMTP_PORT')) || 587,
       secure: true,
       auth: {
-        user: Deno.env.get('SMTP_USER'),
-        pass: Deno.env.get('SMTP_PASS'),
+        user: Deno.env.get('SMTP_USER') || '',
+        pass: Deno.env.get('SMTP_PASS') || '',
       },
     });
 
@@ -100,7 +108,7 @@ This message was sent through CostumeCameos. You can reply directly to this emai
   } catch (error) {
     console.error('Error sending email:', error);
     return new Response(
-      JSON.stringify({ error: 'Failed to send email' }),
+      JSON.stringify({ error: error.message || 'Failed to send email' }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

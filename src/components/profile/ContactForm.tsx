@@ -27,6 +27,13 @@ const ContactForm: React.FC<ContactFormProps> = ({ profileId, profileName, conta
 
   const onSubmit = async (data: FormData) => {
     try {
+      // Log request details for debugging
+      console.log('Sending request to:', `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-contact-email`);
+      console.log('Request data:', {
+        ...data,
+        recipientEmail: contactEmail,
+      });
+
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-contact-email`, {
         method: 'POST',
         headers: {
