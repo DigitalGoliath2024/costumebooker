@@ -1,8 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { SmtpClient } from "npm:emailjs-smtp-client@2.0.1";
 
+// Update CORS headers to handle both development and production environments
 const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://costumecameos.com',
+  'Access-Control-Allow-Origin': Deno.env.get('ENVIRONMENT') === 'production' 
+    ? 'https://costumecameos.com'
+    : '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   'Content-Type': 'application/json',
