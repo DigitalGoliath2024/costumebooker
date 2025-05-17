@@ -26,3 +26,4 @@ jobs:
         run: |
           supabase link --project-ref dbmvtqvualzpqpjsqdwq
           supabase functions deploy send-contact-email --no-verify-jwt
+
