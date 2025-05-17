@@ -24,6 +24,7 @@ const BrowsePage: React.FC = () => {
         setLoading(true);
         setError(null);
         
+        // Build the base query
         let query = supabase
           .from('profiles')
           .select(`
@@ -43,9 +44,13 @@ const BrowsePage: React.FC = () => {
             payment_expiry,
             profile_categories (category),
             profile_images (id, image_url, position)
-          `)
+          `);
+
+        // Add filters
+        query = query
           .eq('is_active', true)
-          .eq('payment_status', 'paid');
+          .eq('payment_status', 'paid')
+          .not('display_name', 'is', null); // Ensure profile is complete
 
         if (selectedState) {
           query = query.eq('state', selectedState);
@@ -57,15 +62,17 @@ const BrowsePage: React.FC = () => {
 
         const { data, error: fetchError } = await query;
 
-        if (fetchError) throw fetchError;
+        if (fetchError) {
+          console.error('Database error:', fetchError);
+          throw new Error('Failed to fetch profiles');
+        }
 
         if (!data) {
           setProfiles([]);
           return;
         }
 
-        console.log('Fetched profiles:', data.length);
-
+        // Map and filter the profiles
         const mappedProfiles: Profile[] = data.map(item => ({
           id: item.id,
           displayName: item.display_name,
@@ -99,7 +106,7 @@ const BrowsePage: React.FC = () => {
           );
         }
 
-        console.log('Filtered profiles:', filteredProfiles.length);
+        console.log(`Found ${filteredProfiles.length} active profiles`);
         setProfiles(filteredProfiles);
       } catch (error: any) {
         console.error('Error fetching profiles:', error);
