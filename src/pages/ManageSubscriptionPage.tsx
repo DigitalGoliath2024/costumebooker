@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Check, Shield, AlertTriangle } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Check, Shield } from 'lucide-react';
 import Layout from '../components/layout/Layout';
 import Button from '../components/ui/Button';
 import { useAuth } from '../contexts/AuthContext';
 import { redirectToCheckout } from '../lib/stripe';
 import { supabase } from '../lib/supabase';
-import { STRIPE_PRODUCTS } from '../stripe-config';
 
 const ManageSubscriptionPage: React.FC = () => {
   const { user, session } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -38,15 +39,24 @@ const ManageSubscriptionPage: React.FC = () => {
   }, [user]);
 
   const handleSubscribe = async () => {
-    if (!user || !session) {
-      navigate('/signin?redirect=/dashboard/subscription');
-      return;
-    }
-
     try {
+      setCheckoutError(null);
+      
+      if (!session?.access_token) {
+        // Save the current URL to redirect back after login
+        navigate('/signin', { 
+          state: { 
+            redirect: location.pathname,
+            message: 'Please sign in to continue with your subscription.' 
+          }
+        });
+        return;
+      }
+
       await redirectToCheckout('YEARLY_MEMBERSHIP', session.access_token);
     } catch (error: any) {
       console.error('Error creating checkout session:', error);
+      setCheckoutError(error.message || 'Failed to start checkout process');
     }
   };
 
@@ -175,12 +185,18 @@ const ManageSubscriptionPage: React.FC = () => {
                 ))}
               </ul>
 
+              {checkoutError && (
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+                  {checkoutError}
+                </div>
+              )}
+
               <Button
                 onClick={handleSubscribe}
                 className="w-full mb-6"
                 size="lg"
               >
-                {user ? 'Subscribe Now' : 'Sign In to Subscribe'}
+                Subscribe Now
               </Button>
 
               <div className="text-center">
