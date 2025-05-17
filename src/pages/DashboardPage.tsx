@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Edit, Image, DollarSign, User, LogOut, Eye, Shield, Trash2, Check, X } from 'lucide-react';
+import { Edit, Image, DollarSign, User, LogOut, Eye, Shield, Trash2, Check, AlertTriangle } from 'lucide-react';
 import Layout from '../components/layout/Layout';
 import Button from '../components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
@@ -31,7 +31,7 @@ const DashboardPage: React.FC = () => {
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
   const [showInquiryDetails, setShowInquiryDetails] = useState(false);
-  const [deletingInquiryId, setDeletingInquiryId] = useState<string | null>(null);
+  const [showSafetyInfo, setShowSafetyInfo] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -135,22 +135,17 @@ const DashboardPage: React.FC = () => {
   };
 
   const handleMarkAsRead = async (inquiryId: string) => {
-    if (!user) return;
-
     try {
       const { error } = await supabase
         .from('contact_messages')
         .update({ is_read: true })
-        .eq('id', inquiryId)
-        .eq('profile_id', user.id);
+        .eq('id', inquiryId);
 
       if (error) throw error;
 
-      setInquiries(prevInquiries => 
-        prevInquiries.map(inquiry =>
-          inquiry.id === inquiryId ? { ...inquiry, is_read: true } : inquiry
-        )
-      );
+      setInquiries(inquiries.map(inquiry =>
+        inquiry.id === inquiryId ? { ...inquiry, is_read: true } : inquiry
+      ));
       toast.success('Marked as read');
     } catch (error) {
       console.error('Error marking inquiry as read:', error);
@@ -159,48 +154,27 @@ const DashboardPage: React.FC = () => {
   };
 
   const handleDeleteInquiry = async (inquiryId: string) => {
-    if (!user || !window.confirm('Are you sure you want to delete this inquiry?')) {
+    if (!window.confirm('Are you sure you want to delete this inquiry?')) {
       return;
     }
 
     try {
-      setDeletingInquiryId(inquiryId);
-
-      // First verify the inquiry belongs to the user
-      const { data: inquiryData, error: verifyError } = await supabase
-        .from('contact_messages')
-        .select('id')
-        .eq('id', inquiryId)
-        .eq('profile_id', user.id)
-        .single();
-
-      if (verifyError || !inquiryData) {
-        throw new Error('Inquiry not found or access denied');
-      }
-
-      // Proceed with deletion
-      const { error: deleteError } = await supabase
+      const { error } = await supabase
         .from('contact_messages')
         .delete()
-        .eq('id', inquiryId)
-        .eq('profile_id', user.id);
+        .eq('id', inquiryId);
 
-      if (deleteError) throw deleteError;
+      if (error) throw error;
 
-      // Update local state
-      setInquiries(prevInquiries => prevInquiries.filter(inquiry => inquiry.id !== inquiryId));
-      
+      setInquiries(inquiries.filter(inquiry => inquiry.id !== inquiryId));
       if (selectedInquiry?.id === inquiryId) {
         setSelectedInquiry(null);
         setShowInquiryDetails(false);
       }
-      
       toast.success('Inquiry deleted');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error deleting inquiry:', error);
-      toast.error(error.message || 'Failed to delete inquiry');
-    } finally {
-      setDeletingInquiryId(null);
+      toast.error('Failed to delete inquiry');
     }
   };
 
@@ -344,314 +318,4 @@ const DashboardPage: React.FC = () => {
                     </div>
                   ) : !isProfileComplete ? (
                     <div className="bg-yellow-50 p-4 rounded-md mb-6">
-                      <h3 className="text-lg font-medium text-yellow-800 mb-2">
-                        Profile Incomplete
-                      </h3>
-                      <p className="text-yellow-700 mb-4">
-                        Your profile is missing some required information. Please complete all required fields.
-                      </p>
-                      <Link to="/dashboard/edit-profile">
-                        <Button variant="outline">Complete Profile</Button>
-                      </Link>
-                    </div>
-                  ) : !isPaid ? (
-                    <div className="bg-blue-50 p-4 rounded-md mb-6">
-                      <h3 className="text-lg font-medium text-blue-800 mb-2">
-                        Activate Your Listing
-                      </h3>
-                      <p className="text-blue-700 mb-4">
-                        Your profile is complete! Activate your listing for $29/year to make it visible in our directory.
-                      </p>
-                      <Link to="/dashboard/subscription">
-                        <Button>Activate Listing</Button>
-                      </Link>
-                    </div>
-                  ) : (
-                    <div className="bg-green-50 p-4 rounded-md mb-6">
-                      <h3 className="text-lg font-medium text-green-800 mb-2">
-                        Listing Active
-                      </h3>
-                      <p className="text-green-700 mb-4">
-                        Your listing is active and visible in our directory. Your subscription will renew on {new Date(profile.paymentExpiry || '').toLocaleDateString()}.
-                      </p>
-                      <Link to={`/profile/${profile.id}`}>
-                        <Button variant="outline">View Public Profile</Button>
-                      </Link>
-                    </div>
-                  )}
-
-                  {/* Profile Completion Checklist */}
-                  <div className="mt-6">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">
-                      Profile Completion Checklist
-                    </h3>
-                    <div className="space-y-4">
-                      <div className="flex items-start">
-                        <div className={`flex-shrink-0 h-5 w-5 rounded-full ${profile?.displayName ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                        <div className="ml-3">
-                          <p className="text-sm font-medium text-gray-900">Display Name</p>
-                          <p className="text-sm text-gray-500">
-                            {profile?.displayName || 'Add your cosplay performer name'}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start">
-                        <div className={`flex-shrink-0 h-5 w-5 rounded-full ${profile?.bio ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                        <div className="ml-3">
-                          <p className="text-sm font-medium text-gray-900">Bio</p>
-                          <p className="text-sm text-gray-500">
-                            {profile?.bio ? 'Bio added' : 'Add a description of your cosplay services'}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start">
-                        <div className={`flex-shrink-0 h-5 w-5 rounded-full ${profile?.state && profile?.city ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                        <div className="ml-3">
-                          <p className="text-sm font-medium text-gray-900">Location</p>
-                          <p className="text-sm text-gray-500">
-                            {profile?.city && profile?.state 
-                              ? `${profile.city}, ${profile.state}` 
-                              : 'Add your location'}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start">
-                        <div className={`flex-shrink-0 h-5 w-5 rounded-full ${profile?.categories?.length > 0 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                        <div className="ml-3">
-                          <p className="text-sm font-medium text-gray-900">Categories</p>
-                          <p className="text-sm text-gray-500">
-                            {profile?.categories?.length > 0 
-                              ? `${profile.categories.length} categories selected` 
-                              : 'Select your cosplay categories'}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start">
-                        <div className={`flex-shrink-0 h-5 w-5 rounded-full ${profile?.images?.length > 0 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                        <div className="ml-3">
-                          <p className="text-sm font-medium text-gray-900">Images</p>
-                          <p className="text-sm text-gray-500">
-                            {profile?.images?.length > 0 
-                              ? `${profile.images.length} images uploaded` 
-                              : 'Upload cosplay images (up to 4)'}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start">
-                        <div className={`flex-shrink-0 h-5 w-5 rounded-full ${isPaid ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                        <div className="ml-3">
-                          <p className="text-sm font-medium text-gray-900">Payment</p>
-                          <p className="text-sm text-gray-500">
-                            {isPaid 
-                              ? `Paid through ${new Date(profile?.paymentExpiry || '').toLocaleDateString()}` 
-                              : 'Activate your listing ($29/year)'}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Inquiries Card */}
-              {hasProfile && (
-                <Card className="mt-6">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle>Inquiries</CardTitle>
-                      <div className="flex items-center gap-4">
-                        <p className="text-sm text-gray-600">
-                          Be sure to follow best safety practices when contacting potential clients.
-                        </p>
-                        <Link to="/safety-first">
-                          <Button variant="outline" size="sm" className="flex items-center gap-2">
-                            <Shield className="h-4 w-4" />
-                            Safety Guide
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {showInquiryDetails && selectedInquiry ? (
-                      <div className="space-y-6">
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setShowInquiryDetails(false);
-                            setSelectedInquiry(null);
-                          }}
-                          className="mb-4"
-                        >
-                          Back to List
-                        </Button>
-                        
-                        <div className="bg-gray-50 p-6 rounded-lg">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                            <div>
-                              <h4 className="text-sm font-medium text-gray-500">From</h4>
-                              <p className="text-gray-900">{selectedInquiry.sender_name}</p>
-                              <p className="text-gray-600">{selectedInquiry.sender_email}</p>
-                            </div>
-                            <div>
-                              <h4 className="text-sm font-medium text-gray-500">Contact Info</h4>
-                              <p className="text-gray-900">{selectedInquiry.phone_number}</p>
-                              <p className="text-gray-600">{selectedInquiry.address}</p>
-                            </div>
-                          </div>
-                          
-                          <div className="mb-6">
-                            <h4 className="text-sm font-medium text-gray-500 mb-2">Event Types</h4>
-                            <div className="flex flex-wrap gap-2">
-                              {selectedInquiry.event_type.map((type) => (
-                                <Badge key={type} variant="secondary">
-                                  {type}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                          
-                          <div>
-                            <h4 className="text-sm font-medium text-gray-500 mb-2">Message</h4>
-                            <div className="bg-white p-4 rounded-md border border-gray-200">
-                              <p className="text-gray-900 whitespace-pre-wrap">{selectedInquiry.message}</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex justify-between">
-                          {!selectedInquiry.is_read && (
-                            <Button
-                              onClick={() => handleMarkAsRead(selectedInquiry.id)}
-                              className="flex items-center"
-                            >
-                              <Check className="mr-2 h-4 w-4" />
-                              Mark as Read
-                            </Button>
-                          )}
-                          <Button
-                            variant="outline"
-                            onClick={() => handleDeleteInquiry(selectedInquiry.id)}
-                            disabled={deletingInquiryId === selectedInquiry.id}
-                            className="flex items-center text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            {deletingInquiryId === selectedInquiry.id ? 'Deleting...' : 'Delete'}
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        {inquiries.length === 0 ? (
-                          <div className="text-center py-6">
-                            <p className="text-gray-500">No inquiries yet</p>
-                          </div>
-                        ) : (
-                          <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                              <thead className="bg-gray-50">
-                                <tr>
-                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Date
-                                  </th>
-                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    From
-                                  </th>
-                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Event Types
-                                  </th>
-                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Status
-                                  </th>
-                                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Actions
-                                  </th>
-                                </tr>
-                              </thead>
-                              <tbody className="bg-white divide-y divide-gray-200">
-                                {inquiries.map((inquiry) => (
-                                  <tr
-                                    key={inquiry.id}
-                                    className={`hover:bg-gray-50 ${!inquiry.is_read ? 'bg-blue-50' : ''}`}
-                                  >
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                      {new Date(inquiry.created_at).toLocaleDateString()}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                      <div className="text-sm font-medium text-gray-900">
-                                        {inquiry.sender_name}
-                                      </div>
-                                      <div className="text-sm text-gray-500">
-                                        {inquiry.sender_email}
-                                      </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                      <div className="flex flex-wrap gap-1">
-                                        {inquiry.event_type.map((type) => (
-                                          <Badge key={type} variant="secondary">
-                                            {type}
-                                          </Badge>
-                                        ))}
-                                      </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                      <Badge
-                                        variant={inquiry.is_read ? 'success' : 'warning'}
-                                      >
-                                        {inquiry.is_read ? 'Read' : 'Unread'}
-                                      </Badge>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                      <div className="flex justify-end space-x-2">
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={() => {
-                                            setSelectedInquiry(inquiry);
-                                            setShowInquiryDetails(true);
-                                          }}
-                                          className="text-purple-600 hover:text-purple-700"
-                                        >
-                                          <Eye className="h-4 w-4" />
-                                        </Button>
-                                        {!inquiry.is_read && (
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => handleMarkAsRead(inquiry.id)}
-                                            className="text-green-600 hover:text-green-700"
-                                          >
-                                            <Check className="h-4 w-4" />
-                                          </Button>
-                                        )}
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={() => handleDeleteInquiry(inquiry.id)}
-                                          disabled={deletingInquiryId === inquiry.id}
-                                          className="text-red-600 hover:text-red-700"
-                                        >
-                                          <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </Layout>
-  );
-};
-
-export default DashboardPage;
+                      <h3 className="text-l
