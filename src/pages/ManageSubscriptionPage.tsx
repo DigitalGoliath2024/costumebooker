@@ -8,17 +8,17 @@ import { redirectToCheckout } from '../lib/stripe';
 import { STRIPE_PRODUCTS } from '../stripe-config';
 
 const ManageSubscriptionPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const navigate = useNavigate();
 
   const handleSubscribe = async () => {
-    if (!user) {
+    if (!user || !session) {
       navigate('/signin?redirect=/dashboard/subscription');
       return;
     }
 
     try {
-      await redirectToCheckout('YEARLY_MEMBERSHIP');
+      await redirectToCheckout('YEARLY_MEMBERSHIP', session.access_token);
     } catch (error: any) {
       console.error('Error creating checkout session:', error);
     }
