@@ -20,7 +20,7 @@ serve(async (req) => {
     });
   }
 
-  // ❌ Block everything except POST here
+  // ❌ Block everything except POST here  
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
