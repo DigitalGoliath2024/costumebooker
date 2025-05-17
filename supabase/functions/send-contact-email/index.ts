@@ -60,11 +60,17 @@ serve(async (req) => {
       secure: Number(Deno.env.get('SMTP_PORT')) === 465,
       username: Deno.env.get('SMTP_USER') || '',
       password: Deno.env.get('SMTP_PASS') || '',
+      debug: true
     });
 
-    // Connect to SMTP server
+    // Connect and authenticate
     await smtp.connect();
-    
+    await smtp.greet({ hostname: Deno.env.get('SMTP_HOST') || '' }); // Send EHLO
+    if (smtp.port !== 465) {
+      await smtp.startTLS(); // For port 587
+    }
+    await smtp.auth({ username: smtp.username, password: smtp.password });
+
     // Send email
     await smtp.mail({ from: 'noreply@costumecameos.com' });
     await smtp.rcpt({ to: recipientEmail });
