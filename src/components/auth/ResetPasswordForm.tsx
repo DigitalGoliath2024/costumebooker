@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import { supabase } from '../../lib/supabase';
@@ -13,6 +13,7 @@ type ResetPasswordFormValues = {
 
 const ResetPasswordForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const [searchParams] = useSearchParams();
   const {
     register,
     handleSubmit,
@@ -23,23 +24,27 @@ const ResetPasswordForm: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const handleHashParams = async () => {
+    const handleResetToken = async () => {
       try {
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const accessToken = hashParams.get('access_token');
-        const refreshToken = hashParams.get('refresh_token');
-        const type = hashParams.get('type');
+        // Get the type and access token from URL parameters
+        const type = searchParams.get('type');
+        const accessToken = searchParams.get('access_token');
 
-        if (accessToken && type === 'recovery') {
-          const { data: { session }, error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken || '',
-          });
-
-          if (error) throw error;
+        if (!accessToken || type !== 'recovery') {
+          throw new Error('Invalid or missing reset token');
         }
-      } catch (error) {
-        console.error('Error setting session:', error);
+
+        // Set the session with the access token
+        const { data: { session }, error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: '',
+        });
+
+        if (error || !session) {
+          throw error || new Error('Failed to set session');
+        }
+      } catch (error: any) {
+        console.error('Error handling reset token:', error);
         toast.error('Invalid or expired reset link');
         navigate('/signin');
       } finally {
@@ -47,8 +52,8 @@ const ResetPasswordForm: React.FC = () => {
       }
     };
 
-    handleHashParams();
-  }, [navigate]);
+    handleResetToken();
+  }, [navigate, searchParams]);
 
   const onSubmit = async (data: ResetPasswordFormValues) => {
     try {
