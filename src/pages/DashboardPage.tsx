@@ -31,6 +31,7 @@ const DashboardPage: React.FC = () => {
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
   const [showInquiryDetails, setShowInquiryDetails] = useState(false);
+  const [deletingInquiryId, setDeletingInquiryId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -134,18 +135,22 @@ const DashboardPage: React.FC = () => {
   };
 
   const handleMarkAsRead = async (inquiryId: string) => {
+    if (!user) return;
+
     try {
       const { error } = await supabase
         .from('contact_messages')
         .update({ is_read: true })
         .eq('id', inquiryId)
-        .eq('profile_id', user?.id);
+        .eq('profile_id', user.id);
 
       if (error) throw error;
 
-      setInquiries(inquiries.map(inquiry =>
-        inquiry.id === inquiryId ? { ...inquiry, is_read: true } : inquiry
-      ));
+      setInquiries(prevInquiries => 
+        prevInquiries.map(inquiry =>
+          inquiry.id === inquiryId ? { ...inquiry, is_read: true } : inquiry
+        )
+      );
       toast.success('Marked as read');
     } catch (error) {
       console.error('Error marking inquiry as read:', error);
@@ -154,28 +159,34 @@ const DashboardPage: React.FC = () => {
   };
 
   const handleDeleteInquiry = async (inquiryId: string) => {
-    if (!window.confirm('Are you sure you want to delete this inquiry?')) {
+    if (!user || !window.confirm('Are you sure you want to delete this inquiry?')) {
       return;
     }
 
     try {
+      setDeletingInquiryId(inquiryId);
+
       const { error } = await supabase
         .from('contact_messages')
         .delete()
         .eq('id', inquiryId)
-        .eq('profile_id', user?.id);
+        .eq('profile_id', user.id);
 
       if (error) throw error;
 
       setInquiries(prevInquiries => prevInquiries.filter(inquiry => inquiry.id !== inquiryId));
+      
       if (selectedInquiry?.id === inquiryId) {
         setSelectedInquiry(null);
         setShowInquiryDetails(false);
       }
+      
       toast.success('Inquiry deleted');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting inquiry:', error);
-      toast.error('Failed to delete inquiry');
+      toast.error(error.message || 'Failed to delete inquiry');
+    } finally {
+      setDeletingInquiryId(null);
     }
   };
 
@@ -507,10 +518,11 @@ const DashboardPage: React.FC = () => {
                           <Button
                             variant="outline"
                             onClick={() => handleDeleteInquiry(selectedInquiry.id)}
+                            disabled={deletingInquiryId === selectedInquiry.id}
                             className="flex items-center text-red-600 hover:text-red-700"
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
+                            {deletingInquiryId === selectedInquiry.id ? 'Deleting...' : 'Delete'}
                           </Button>
                         </div>
                       </div>
@@ -602,6 +614,7 @@ const DashboardPage: React.FC = () => {
                                           variant="ghost"
                                           size="sm"
                                           onClick={() => handleDeleteInquiry(inquiry.id)}
+                                          disabled={deletingInquiryId === inquiry.id}
                                           className="text-red-600 hover:text-red-700"
                                         >
                                           <Trash2 className="h-4 w-4" />
