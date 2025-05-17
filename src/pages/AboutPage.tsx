@@ -79,12 +79,6 @@ const AboutPage: React.FC = () => {
                 <p>
                   For general inquiries: <a href="mailto:support@costumecameos.com" className="text-purple-600 hover:text-purple-700">support@costumecameos.com</a>
                 </p>
-                <p>
-                  For business partnerships: <a href="mailto:partners@costumecameos.com" className="text-purple-600 hover:text-purple-700">partners@costumecameos.com</a>
-                </p>
-                <p>
-                  For press inquiries: <a href="mailto:press@costumecameos.com" className="text-purple-600 hover:text-purple-700">press@costumecameos.com</a>
-                </p>
               </div>
             </div>
           </div>
