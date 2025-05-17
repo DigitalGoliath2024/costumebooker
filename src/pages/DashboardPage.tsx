@@ -166,14 +166,28 @@ const DashboardPage: React.FC = () => {
     try {
       setDeletingInquiryId(inquiryId);
 
-      const { error } = await supabase
+      // First verify the inquiry belongs to the user
+      const { data: inquiryData, error: verifyError } = await supabase
+        .from('contact_messages')
+        .select('id')
+        .eq('id', inquiryId)
+        .eq('profile_id', user.id)
+        .single();
+
+      if (verifyError || !inquiryData) {
+        throw new Error('Inquiry not found or access denied');
+      }
+
+      // Proceed with deletion
+      const { error: deleteError } = await supabase
         .from('contact_messages')
         .delete()
         .eq('id', inquiryId)
         .eq('profile_id', user.id);
 
-      if (error) throw error;
+      if (deleteError) throw deleteError;
 
+      // Update local state
       setInquiries(prevInquiries => prevInquiries.filter(inquiry => inquiry.id !== inquiryId));
       
       if (selectedInquiry?.id === inquiryId) {
