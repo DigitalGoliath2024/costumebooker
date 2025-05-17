@@ -430,7 +430,20 @@ const DashboardPage: React.FC = () => {
               {hasProfile && (
                 <Card className="mt-6">
                   <CardHeader>
-                    <CardTitle>Inquiries</CardTitle>
+                    <div className="flex items-center justify-between">
+                      <CardTitle>Inquiries</CardTitle>
+                      <div className="flex items-center gap-4">
+                        <p className="text-sm text-gray-600">
+                          Be sure to follow best safety practices when contacting potential clients.
+                        </p>
+                        <Link to="/safety-first">
+                          <Button variant="outline" size="sm" className="flex items-center gap-2">
+                            <Shield className="h-4 w-4" />
+                            Safety Guide
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
                   </CardHeader>
                   <CardContent>
                     {showInquiryDetails && selectedInquiry ? (
