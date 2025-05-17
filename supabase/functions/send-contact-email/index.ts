@@ -1,6 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.39.3';
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
-import { SmtpClient } from "npm:emailjs-smtp-client@2.0.1";
+import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -117,43 +117,48 @@ serve(async (req) => {
     }
 
     console.log('Sending email via SMTP');
+    
     // Set up SMTP client
-    const client = new SmtpClient(smtpHost, smtpPort, {
-      auth: {
-        user: smtpUser,
-        pass: smtpPass,
+    const client = new SmtpClient({
+      connection: {
+        hostname: smtpHost,
+        port: smtpPort,
+        tls: smtpPort === 465,
+        auth: {
+          username: smtpUser,
+          password: smtpPass,
+        },
       },
-      useSecureTransport: smtpPort === 465,
-      requireTLS: smtpPort === 587,
     });
 
-    const emailContent = `From: "CostumeCameos" <noreply@costumecameos.com>
-Reply-To: ${senderEmail}
-To: ${recipientEmail}
-Subject: New Message from ${senderName} via CostumeCameos
-Content-Type: text/plain; charset=utf-8
-
-New Contact Message
+    try {
+      await client.send({
+        from: 'noreply@costumecameos.com',
+        to: recipientEmail,
+        subject: `New Message from ${senderName} via CostumeCameos`,
+        content: `New Contact Message
 
 From: ${senderName} (${senderEmail})
 
 Message:
 ${message}
 
-This message was sent through CostumeCameos. You can reply directly to this email to respond to ${senderName}.`;
-
-    try {
-      await client.connect();
-      await client.send({
-        from: 'noreply@costumecameos.com',
-        to: recipientEmail,
-        data: emailContent,
+This message was sent through CostumeCameos. You can reply directly to this email to respond to ${senderName}.`,
+        html: `
+          <h2>New Contact Message</h2>
+          <p><strong>From:</strong> ${senderName} (${senderEmail})</p>
+          <div style="margin: 20px 0; padding: 20px; background: #f5f5f5; border-radius: 5px;">
+            <p style="white-space: pre-wrap;">${message}</p>
+          </div>
+          <p style="color: #666; font-size: 0.9em;">This message was sent through CostumeCameos. You can reply directly to this email to respond to ${senderName}.</p>
+        `,
       });
-      await client.quit();
       console.log('Email sent successfully');
     } catch (emailError) {
       console.error('SMTP error:', emailError);
       throw new Error(`Failed to send email: ${emailError.message}`);
+    } finally {
+      await client.close();
     }
 
     return new Response(JSON.stringify({ success: true }), {
