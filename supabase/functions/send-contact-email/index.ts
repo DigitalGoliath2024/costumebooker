@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { SmtpClient } from "npm:nodemailer";
+import nodemailer from "https://esm.sh/nodemailer@6.9.18";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -54,14 +54,18 @@ serve(async (req) => {
       );
     }
 
-    const smtp = new SmtpClient({
-      host: Deno.env.get('SMTP_HOST') || '',
+    // Create SMTP transport with more flexible configuration
+    const smtp = nodemailer.createTransport({
+      host: Deno.env.get('SMTP_HOST'),
       port: Number(Deno.env.get('SMTP_PORT')) || 587,
-      secure: true,
+      secure: Number(Deno.env.get('SMTP_PORT')) === 465, // Only use secure for port 465
       auth: {
-        user: Deno.env.get('SMTP_USER') || '',
-        pass: Deno.env.get('SMTP_PASS') || '',
+        user: Deno.env.get('SMTP_USER'),
+        pass: Deno.env.get('SMTP_PASS'),
       },
+      tls: {
+        rejectUnauthorized: false // Allow self-signed certificates
+      }
     });
 
     // Send email with HTML format

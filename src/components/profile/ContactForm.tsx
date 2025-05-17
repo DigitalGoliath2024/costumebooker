@@ -27,14 +27,9 @@ const ContactForm: React.FC<ContactFormProps> = ({ profileId, profileName, conta
 
   const onSubmit = async (data: FormData) => {
     try {
-      // Log request details for debugging
-      console.log('Sending request to:', `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-contact-email`);
-      console.log('Request data:', {
-        ...data,
-        recipientEmail: contactEmail,
-      });
-
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-contact-email`, {
+      const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-contact-email`;
+      
+      const response = await fetch(functionUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -46,14 +41,19 @@ const ContactForm: React.FC<ContactFormProps> = ({ profileId, profileName, conta
         }),
       });
 
-      const result = await response.json();
-
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to send message');
+        const errorData = await response.json();
+        throw new Error(errorData.error || errorData.details || 'Failed to send message');
       }
 
-      toast.success('Message sent successfully!');
-      reset();
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success('Message sent successfully!');
+        reset();
+      } else {
+        throw new Error('Failed to send message');
+      }
     } catch (error: any) {
       console.error('Error sending message:', error);
       toast.error(error.message || 'Failed to send message. Please try again.');
