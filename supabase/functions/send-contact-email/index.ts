@@ -1,13 +1,16 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { SmtpClient } from "npm:nodemailer";
 
+// ✅ PRODUCTION CORS — allow only your real site
 const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://costumecameos.com', 
+  'Access-Control-Allow-Origin': 'https://costumecameos.com',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Content-Type': 'application/json',
 };
 
 serve(async (req) => {
+  // ✅ Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('OK', {
       status: 200,
@@ -18,10 +21,11 @@ serve(async (req) => {
     });
   }
 
+  // ❌ Block all non-POST requests
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: corsHeaders,
     });
   }
 
@@ -47,13 +51,14 @@ serve(async (req) => {
     });
 
     return new Response(JSON.stringify({ success: true }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
+      headers: corsHeaders,
     });
   } catch (error) {
     console.error('Email send error:', error);
     return new Response(JSON.stringify({ error: 'Failed to send email' }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: corsHeaders,
     });
   }
 });
