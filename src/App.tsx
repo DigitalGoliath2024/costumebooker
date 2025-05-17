@@ -24,6 +24,7 @@ import ManageImagesPage from './pages/ManageImagesPage';
 import ManageSubscriptionPage from './pages/ManageSubscriptionPage';
 import PreviewProfilePage from './pages/PreviewProfilePage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
+import SafetyFirstPage from './pages/SafetyFirstPage';
 
 function App() {
   return (
@@ -53,6 +54,7 @@ function App() {
           <Route path="/dashboard/subscription" element={<ManageSubscriptionPage />} />
           <Route path="/dashboard/preview" element={<PreviewProfilePage />} />
           <Route path="/admin" element={<AdminDashboardPage />} />
+          <Route path="/safety-first" element={<SafetyFirstPage />} />
         </Routes>
         <Toaster position="top-right" />
       </Router>
