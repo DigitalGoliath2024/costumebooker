@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { SMTPClient } from "npm:smtp-client@0.4.0";
+import { SmtpClient } from "npm:emailjs-smtp-client@2.0.1";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -54,27 +54,19 @@ serve(async (req) => {
       );
     }
 
-    const smtp = new SMTPClient({
-      host: Deno.env.get('SMTP_HOST') || '',
-      port: Number(Deno.env.get('SMTP_PORT')) || 587,
-      secure: Number(Deno.env.get('SMTP_PORT')) === 465,
-      username: Deno.env.get('SMTP_USER') || '',
-      password: Deno.env.get('SMTP_PASS') || '',
-      debug: true
-    });
+    const client = new SmtpClient(
+      Deno.env.get('SMTP_HOST') || '',
+      Number(Deno.env.get('SMTP_PORT')) || 587,
+      {
+        auth: {
+          user: Deno.env.get('SMTP_USER') || '',
+          pass: Deno.env.get('SMTP_PASS') || '',
+        },
+        useSecureTransport: Number(Deno.env.get('SMTP_PORT')) === 465,
+        requireTLS: Number(Deno.env.get('SMTP_PORT')) === 587,
+      }
+    );
 
-    // Connect and authenticate
-    await smtp.connect();
-    await smtp.greet({ hostname: Deno.env.get('SMTP_HOST') || '' }); // Send EHLO
-    if (smtp.port !== 465) {
-      await smtp.startTLS(); // For port 587
-    }
-    await smtp.auth({ username: smtp.username, password: smtp.password });
-
-    // Send email
-    await smtp.mail({ from: 'noreply@costumecameos.com' });
-    await smtp.rcpt({ to: recipientEmail });
-    
     const emailContent = `From: "CostumeCameos" <noreply@costumecameos.com>
 Reply-To: ${senderEmail}
 To: ${recipientEmail}
@@ -90,8 +82,13 @@ ${message}
 
 This message was sent through CostumeCameos. You can reply directly to this email to respond to ${senderName}.`;
 
-    await smtp.data(emailContent);
-    await smtp.quit();
+    await client.connect();
+    await client.send({
+      from: 'noreply@costumecameos.com',
+      to: recipientEmail,
+      data: emailContent
+    });
+    await client.quit();
 
     return new Response(
       JSON.stringify({ success: true }), 
