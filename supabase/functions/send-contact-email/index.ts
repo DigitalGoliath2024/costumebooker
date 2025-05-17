@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { SmtpClient } from "npm:nodemailer";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*', // Change to 'https://costumecameos.com' when ready
+  'Access-Control-Allow-Origin': 'https://costumecameos.com', 
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': '*',
 };
