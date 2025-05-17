@@ -77,7 +77,7 @@ ${message}
 
 This message was sent through CostumeCameos. You can reply directly to this email to respond to ${senderName}.`;
 
-    // ✅ Send email
+    // ✅ Send email.
     await client.connect();
     await client.send({
       from: 'noreply@costumecameos.com',
