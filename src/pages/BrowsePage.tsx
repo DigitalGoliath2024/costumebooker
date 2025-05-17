@@ -99,130 +99,6 @@ const BrowsePage: React.FC = () => {
     fetchProfiles();
   }, [selectedState, selectedCity, selectedCategories]);
 
-  // For demo purposes, using placeholder data
-  const placeholderProfiles: Profile[] = [
-    {
-      id: '1',
-      displayName: 'Captain Marvel',
-      bio: 'Professional superhero cosplayer with 5+ years of experience',
-      state: 'CA',
-      city: 'Los Angeles',
-      priceMin: 150,
-      priceMax: 300,
-      facebook: 'captainmarvel',
-      instagram: 'captainmarvel',
-      tiktok: 'captainmarvel',
-      twitter: 'captainmarvel',
-      isActive: true,
-      paymentStatus: 'paid',
-      paymentExpiry: '2025-12-31',
-      categories: ['Hero', 'Comic Book Character'],
-      images: [
-        {
-          id: '1-1',
-          url: 'https://images.pexels.com/photos/6942436/pexels-photo-6942436.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-          position: 0,
-        },
-      ],
-    },
-    {
-      id: '2',
-      displayName: 'Joker',
-      bio: 'Award-winning villain cosplayer available for events',
-      state: 'NY',
-      city: 'New York City',
-      priceMin: 200,
-      priceMax: 400,
-      facebook: 'joker',
-      instagram: 'joker',
-      tiktok: null,
-      twitter: 'joker',
-      isActive: true,
-      paymentStatus: 'paid',
-      paymentExpiry: '2025-12-31',
-      categories: ['Villain', 'Comic Book Character'],
-      images: [
-        {
-          id: '2-1',
-          url: 'https://images.pexels.com/photos/8107206/pexels-photo-8107206.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-          position: 0,
-        },
-      ],
-    },
-    {
-      id: '3',
-      displayName: 'Princess Zelda',
-      bio: 'Video game character cosplayer specializing in fantasy worlds',
-      state: 'WA',
-      city: 'Seattle',
-      priceMin: 125,
-      priceMax: 250,
-      facebook: 'zelda',
-      instagram: 'zelda',
-      tiktok: 'zelda',
-      twitter: null,
-      isActive: true,
-      paymentStatus: 'paid',
-      paymentExpiry: '2025-12-31',
-      categories: ['Video Game Character', 'Fantasy'],
-      images: [
-        {
-          id: '3-1',
-          url: 'https://images.pexels.com/photos/7144180/pexels-photo-7144180.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-          position: 0,
-        },
-      ],
-    },
-    {
-      id: '4',
-      displayName: 'Naruto',
-      bio: 'Anime cosplayer with authentic costume and character portrayal',
-      state: 'FL',
-      city: 'Miami',
-      priceMin: 100,
-      priceMax: 200,
-      facebook: 'naruto',
-      instagram: 'naruto',
-      tiktok: 'naruto',
-      twitter: 'naruto',
-      isActive: true,
-      paymentStatus: 'paid',
-      paymentExpiry: '2025-12-31',
-      categories: ['Anime/Manga'],
-      images: [
-        {
-          id: '4-1',
-          url: 'https://images.pexels.com/photos/12454899/pexels-photo-12454899.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-          position: 0,
-        },
-      ],
-    },
-  ];
-
-  // Filter placeholder profiles based on selected filters
-  let filteredPlaceholderProfiles = placeholderProfiles;
-  
-  if (selectedState) {
-    filteredPlaceholderProfiles = filteredPlaceholderProfiles.filter(
-      (profile) => profile.state === selectedState
-    );
-  }
-  
-  if (selectedCity) {
-    filteredPlaceholderProfiles = filteredPlaceholderProfiles.filter(
-      (profile) => profile.city === selectedCity
-    );
-  }
-  
-  if (selectedCategories.length > 0) {
-    filteredPlaceholderProfiles = filteredPlaceholderProfiles.filter((profile) =>
-      profile.categories.some((category) => selectedCategories.includes(category))
-    );
-  }
-
-  // Use real data if available, otherwise use placeholder data
-  const displayProfiles = profiles.length > 0 ? profiles : filteredPlaceholderProfiles;
-
   // Get state name for display
   const stateName = selectedState 
     ? STATES.find(state => state.abbreviation === selectedState)?.name 
@@ -281,12 +157,12 @@ const BrowsePage: React.FC = () => {
                 <>
                   <div className="mb-6">
                     <p className="text-gray-600">
-                      {displayProfiles.length} {displayProfiles.length === 1 ? 'performer' : 'performers'} found
+                      {profiles.length} {profiles.length === 1 ? 'performer' : 'performers'} found
                     </p>
                   </div>
                   
                   <ProfileGrid 
-                    profiles={displayProfiles} 
+                    profiles={profiles} 
                     emptyMessage={
                       selectedCategories.length > 0 || selectedState || selectedCity
                         ? "No performers found matching your filters. Try adjusting your criteria."
