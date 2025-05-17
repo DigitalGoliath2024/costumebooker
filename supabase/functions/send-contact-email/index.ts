@@ -1,11 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { SmtpClient } from "npm:nodemailer";
 
-// Define CORS headers with explicit origin
+// Define CORS headers that work for both development and production
 const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://costumecameos.com',
+  'Access-Control-Allow-Origin': '*', // Allow all origins in development
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Max-Age': '86400',
   'Access-Control-Allow-Credentials': 'true'
 };
@@ -14,7 +14,7 @@ serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, {
-      status: 204, // Use 204 for OPTIONS
+      status: 204,
       headers: corsHeaders
     });
   }
