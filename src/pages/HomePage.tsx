@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, MapPin, Tag } from 'lucide-react';
+import { Search, MapPin, Tag, Shield } from 'lucide-react';
 import Layout from '../components/layout/Layout';
 import Button from '../components/ui/Button';
 import ProfileGrid from '../components/profile/ProfileGrid';
@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { redirectToCheckout } from '../lib/stripe';
 import { STATES, type Profile } from '../types';
+import toast from 'react-hot-toast';
 
 const HERO_IMAGES = [
   'https://i.ibb.co/TQnDCqP/20250516-1245-Easter-Bunny-Celebration-simple-compose-01jvczrnw9e7hbv0zp7eeb0vmk.png',
@@ -230,7 +231,7 @@ const HomePage: React.FC = () => {
   return (
     <Layout>
       {/* Hero Section */}
-      <section className="relative h-[600px] overflow-hidden">
+      <section className="relative h-[600px] overflow-hidden mt-5">
         {HERO_IMAGES.map((image, index) => (
           <div
             key={index}
