@@ -11,7 +11,11 @@ type ProfileCardProps = {
 };
 
 const ProfileCard: React.FC<ProfileCardProps> = ({ profile }) => {
-  const mainImage = profile.images.find(img => img.position === 0) || profile.images[0];
+  // Sort images by position and get the main image (position 0)
+  const sortedImages = [...profile.images].sort((a, b) => a.position - b.position);
+  const mainImage = sortedImages[0];
+  
+  // Only use placeholder if no images exist
   const imageUrl = mainImage?.url || 'https://images.pexels.com/photos/1036623/pexels-photo-1036623.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2';
 
   return (

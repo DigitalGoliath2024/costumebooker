@@ -44,10 +44,7 @@ const BrowsePage: React.FC = () => {
             payment_expiry,
             profile_categories (category),
             profile_images (id, image_url, position)
-          `);
-
-        // Add filters
-        query = query
+          `)
           .eq('is_active', true)
           .eq('payment_status', 'paid')
           .not('display_name', 'is', null); // Ensure profile is complete
@@ -106,7 +103,6 @@ const BrowsePage: React.FC = () => {
           );
         }
 
-        console.log(`Found ${filteredProfiles.length} active profiles`);
         setProfiles(filteredProfiles);
       } catch (error: any) {
         console.error('Error fetching profiles:', error);
