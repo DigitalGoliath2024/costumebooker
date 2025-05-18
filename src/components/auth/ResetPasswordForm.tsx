@@ -26,7 +26,6 @@ const ResetPasswordForm: React.FC = () => {
   useEffect(() => {
     const handleResetToken = async () => {
       try {
-        // Get the type and access token from URL parameters
         const type = searchParams.get('type');
         const accessToken = searchParams.get('access_token');
 
@@ -34,7 +33,6 @@ const ResetPasswordForm: React.FC = () => {
           throw new Error('Invalid or missing reset token');
         }
 
-        // Set the session with the access token
         const { data: { session }, error } = await supabase.auth.setSession({
           access_token: accessToken,
           refresh_token: '',
@@ -64,6 +62,10 @@ const ResetPasswordForm: React.FC = () => {
       if (error) throw error;
 
       toast.success('Password updated successfully!');
+      
+      // Sign out to clear any existing session
+      await supabase.auth.signOut();
+      
       navigate('/signin');
     } catch (error: any) {
       console.error('Error resetting password:', error);
