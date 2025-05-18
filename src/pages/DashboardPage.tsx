@@ -160,9 +160,9 @@ const DashboardPage: React.FC = () => {
         )
       );
       toast.success('Marked as read');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error marking inquiry as read:', error);
-      toast.error('Failed to mark as read');
+      toast.error(error.message ? `Failed to mark as read: ${error.message}` : 'Failed to mark as read');
     }
   };
 
@@ -174,23 +174,13 @@ const DashboardPage: React.FC = () => {
     try {
       setDeletingInquiryId(inquiryId);
 
-      // Delete the inquiry
       const { error: deleteError } = await supabase
         .from('contact_messages')
         .delete()
         .match({ id: inquiryId, profile_id: user.id });
 
-      if (deleteError) throw deleteError;
-
-      // Verify deletion was successful
-      const { data: checkData } = await supabase
-        .from('contact_messages')
-        .select('id')
-        .eq('id', inquiryId)
-        .single();
-
-      if (checkData) {
-        throw new Error('Failed to delete inquiry');
+      if (deleteError) {
+        throw new Error(deleteError.message);
       }
 
       // Update local state
@@ -201,10 +191,10 @@ const DashboardPage: React.FC = () => {
         setShowInquiryDetails(false);
       }
       
-      toast.success('Inquiry deleted');
+      toast.success('Inquiry deleted successfully');
     } catch (error: any) {
       console.error('Error deleting inquiry:', error);
-      toast.error(error.message || 'Failed to delete inquiry');
+      toast.error(error.message ? `Failed to delete inquiry: ${error.message}` : 'Failed to delete inquiry');
       
       // Refresh inquiries to ensure UI is in sync with database
       if (user) {
