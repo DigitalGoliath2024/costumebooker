@@ -24,25 +24,24 @@ const ResetPasswordForm: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const handleResetToken = async () => {
+    const validateResetToken = async () => {
       try {
         const type = searchParams.get('type');
-        const accessToken = searchParams.get('access_token');
-
-        if (!accessToken || type !== 'recovery') {
-          throw new Error('Invalid or missing reset token');
+        
+        // Check if this is a recovery flow
+        if (type !== 'recovery') {
+          throw new Error('Invalid reset link');
         }
 
-        const { data: { session }, error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: '',
-        });
+        // Get the session to validate the token
+        const { data: { session }, error } = await supabase.auth.getSession();
 
         if (error || !session) {
-          throw error || new Error('Failed to set session');
+          throw error || new Error('Invalid or expired reset link');
         }
+
       } catch (error: any) {
-        console.error('Error handling reset token:', error);
+        console.error('Error validating reset token:', error);
         toast.error('Invalid or expired reset link');
         navigate('/signin');
       } finally {
@@ -50,7 +49,7 @@ const ResetPasswordForm: React.FC = () => {
       }
     };
 
-    handleResetToken();
+    validateResetToken();
   }, [navigate, searchParams]);
 
   const onSubmit = async (data: ResetPasswordFormValues) => {
@@ -63,7 +62,7 @@ const ResetPasswordForm: React.FC = () => {
 
       toast.success('Password updated successfully!');
       
-      // Sign out to clear any existing session
+      // Sign out to ensure clean state
       await supabase.auth.signOut();
       
       navigate('/signin');
