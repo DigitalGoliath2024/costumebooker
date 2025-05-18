@@ -13,7 +13,7 @@ const TermsPage: React.FC = () => {
           <div className="prose max-w-none bg-white p-8 rounded-lg shadow-sm border border-gray-200">
             <h2>1. Acceptance of Terms</h2>
             <p>
-              By accessing or using CosplayConnect, you agree to be bound by these Terms of Service. These terms apply to all users, including performers and visitors.
+              By accessing or using CostumeCameos, you agree to be bound by these Terms of Service. These terms apply to all users, including performers and visitors.
             </p>
 
             <h2>2. Eligibility</h2>
@@ -64,10 +64,14 @@ const TermsPage: React.FC = () => {
               We are not responsible for:
             </p>
             <ul>
-              <li>Arrangements made between performers and clients</li>
-              <li>Quality or safety of performances</li>
-              <li>Disputes between users</li>
-              <li>Content posted by users</li>
+  <li>Arrangements made between performers and clients</li>
+  <li>Quality or safety of performances</li>
+  <li>Disputes between users</li>
+  <li>Content posted by users</li>
+  <li>Background checks or identity verification</li>
+  <li>Accuracy of pricing, availability, or information in listings</li>
+  <li>Failure to perform, cancellations, or no-shows</li>
+  <li>Losses, damages, or legal issues resulting from user interactions</li>
             </ul>
 
             <h2>9. Changes to Terms</h2>
@@ -77,7 +81,7 @@ const TermsPage: React.FC = () => {
 
             <h2>10. Contact</h2>
             <p>
-              For questions about these terms, contact support@cosplayconnect.com
+              For questions about these terms, contact support@costumecameos.com
             </p>
           </div>
         </div>
