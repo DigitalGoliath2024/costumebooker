@@ -104,15 +104,7 @@ const DashboardPage: React.FC = () => {
             })),
           });
 
-          // Fetch inquiries
-          const { data: inquiriesData, error: inquiriesError } = await supabase
-            .from('contact_messages')
-            .select('*')
-            .eq('profile_id', user.id)
-            .order('created_at', { ascending: false });
-
-          if (inquiriesError) throw inquiriesError;
-          setInquiries(inquiriesData || []);
+          await fetchInquiries(user.id);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -124,6 +116,22 @@ const DashboardPage: React.FC = () => {
 
     fetchData();
   }, [user, navigate]);
+
+  const fetchInquiries = async (userId: string) => {
+    try {
+      const { data: inquiriesData, error: inquiriesError } = await supabase
+        .from('contact_messages')
+        .select('*')
+        .eq('profile_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (inquiriesError) throw inquiriesError;
+      setInquiries(inquiriesData || []);
+    } catch (error) {
+      console.error('Error fetching inquiries:', error);
+      toast.error('Failed to load inquiries');
+    }
+  };
 
   const handleSignOut = async () => {
     try {
@@ -166,26 +174,24 @@ const DashboardPage: React.FC = () => {
     try {
       setDeletingInquiryId(inquiryId);
 
-      // First verify the inquiry belongs to the user
-      const { data: inquiryData, error: verifyError } = await supabase
-        .from('contact_messages')
-        .select('id')
-        .eq('id', inquiryId)
-        .eq('profile_id', user.id)
-        .single();
-
-      if (verifyError || !inquiryData) {
-        throw new Error('Inquiry not found or access denied');
-      }
-
-      // Proceed with deletion
+      // Delete the inquiry
       const { error: deleteError } = await supabase
         .from('contact_messages')
         .delete()
-        .eq('id', inquiryId)
-        .eq('profile_id', user.id);
+        .match({ id: inquiryId, profile_id: user.id });
 
       if (deleteError) throw deleteError;
+
+      // Verify deletion was successful
+      const { data: checkData } = await supabase
+        .from('contact_messages')
+        .select('id')
+        .eq('id', inquiryId)
+        .single();
+
+      if (checkData) {
+        throw new Error('Failed to delete inquiry');
+      }
 
       // Update local state
       setInquiries(prevInquiries => prevInquiries.filter(inquiry => inquiry.id !== inquiryId));
@@ -199,6 +205,11 @@ const DashboardPage: React.FC = () => {
     } catch (error: any) {
       console.error('Error deleting inquiry:', error);
       toast.error(error.message || 'Failed to delete inquiry');
+      
+      // Refresh inquiries to ensure UI is in sync with database
+      if (user) {
+        await fetchInquiries(user.id);
+      }
     } finally {
       setDeletingInquiryId(null);
     }
