@@ -21,5 +21,13 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // The app will handle the unauthorized state appropriately
 export const supabase = createClient<Database>(
   supabaseUrl || '',
-  supabaseAnonKey || ''
+  supabaseAnonKey || '',
+  {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+      storage: window.localStorage,
+    },
+  }
 );

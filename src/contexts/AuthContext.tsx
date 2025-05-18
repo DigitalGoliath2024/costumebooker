@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Session } from '@supabase/supabase-js';
+import toast from 'react-hot-toast';
 
 type User = {
   id: string;
@@ -24,7 +25,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   const clearAuthState = () => {
-    localStorage.clear(); // Clear all local storage including any stored tokens
+    localStorage.removeItem('sb-token');
+    localStorage.removeItem('supabase.auth.token');
     setUser(null);
     setSession(null);
   };
@@ -83,23 +85,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
 
-    if (error) {
+      if (error) throw error;
+    } catch (error: any) {
+      console.error('Error signing up:', error);
+      toast.error(error.message || 'Failed to sign up');
       throw error;
     }
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) {
+      if (error) throw error;
+    } catch (error: any) {
+      console.error('Error signing in:', error);
+      toast.error(error.message || 'Failed to sign in');
       throw error;
     }
   };
@@ -107,14 +117,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       clearAuthState(); // Clear local state first
-
       const { error } = await supabase.auth.signOut();
       
       if (error) {
         console.error('Error during sign out:', error);
+        throw error;
       }
-    } catch (error) {
-      console.error('Unexpected error during sign out:', error);
+    } catch (error: any) {
+      console.error('Error signing out:', error);
+      toast.error(error.message || 'Failed to sign out');
+      throw error;
     }
   };
 
