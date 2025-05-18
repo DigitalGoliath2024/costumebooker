@@ -5,7 +5,7 @@ const FAQPage: React.FC = () => {
   const faqs = [
     {
       question: "What kind of characters can I portray?",
-      answer: "You can portray generic character types like spider-themed heroes, bat-inspired vigilantes, magical wizards, space warriors, etc. For trademark reasons, avoid using specific trademarked character names or claiming to be official versions of copyrighted characters."
+      answer: "You can portray any character types like spider-themed heroes, bat-inspired vigilantes, magical wizards, space warriors, video game icons, etc. For trademark reasons, avoid using specific trademarked character names or claiming to be official versions of copyrighted characters."
     },
     {
       question: "Can I use photos of my cosplay costumes?",
