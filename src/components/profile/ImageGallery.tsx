@@ -8,18 +8,29 @@ type ImageGalleryProps = {
 const ImageGallery: React.FC<ImageGalleryProps> = ({ images, alt }) => {
   const [activeImage, setActiveImage] = useState(0);
   
-  // If no images, use a placeholder
+  // Sort images by position and ensure we have valid URLs
   const displayImages = images.length > 0 
-    ? images.sort((a, b) => a.position - b.position) 
-    : [{ id: 'placeholder', url: 'https://images.pexels.com/photos/1036623/pexels-photo-1036623.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2', position: 0 }];
+    ? images
+        .filter(img => img && img.url) // Filter out any invalid images
+        .sort((a, b) => a.position - b.position)
+    : [{ 
+        id: 'placeholder', 
+        url: 'https://images.pexels.com/photos/1036623/pexels-photo-1036623.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2', 
+        position: 0 
+      }];
 
   return (
     <div className="space-y-4">
-      <div className="aspect-w-4 aspect-h-3 overflow-hidden rounded-lg">
+      <div className="aspect-w-4 aspect-h-3 overflow-hidden rounded-lg bg-gray-100">
         <img
           src={displayImages[activeImage]?.url}
           alt={`${alt} - Image ${activeImage + 1}`}
           className="w-full h-full object-cover"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            console.error('Failed to load image:', target.src);
+            target.src = 'https://images.pexels.com/photos/1036623/pexels-photo-1036623.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2';
+          }}
         />
       </div>
       {displayImages.length > 1 && (
@@ -38,6 +49,11 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, alt }) => {
                 src={image.url}
                 alt={`${alt} - Thumbnail ${index + 1}`}
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  console.error('Failed to load thumbnail:', target.src);
+                  target.src = 'https://images.pexels.com/photos/1036623/pexels-photo-1036623.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2';
+                }}
               />
             </button>
           ))}
