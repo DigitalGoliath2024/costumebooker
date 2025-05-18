@@ -11,12 +11,5 @@ export default defineConfig({
     strictPort: true,
     host: true,
     cors: true,
-    proxy: {
-      '/api': {
-        target: process.env.VITE_SUPABASE_URL,
-        changeOrigin: true,
-        secure: false,
-      },
-    },
   },
 });

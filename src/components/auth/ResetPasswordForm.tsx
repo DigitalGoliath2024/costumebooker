@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import { supabase } from '../../lib/supabase';
@@ -13,7 +13,6 @@ type ResetPasswordFormValues = {
 
 const ResetPasswordForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const [searchParams] = useSearchParams();
   const {
     register,
     handleSubmit,
@@ -24,24 +23,24 @@ const ResetPasswordForm: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const validateResetToken = async () => {
+    const validateSession = async () => {
       try {
-        const type = searchParams.get('type');
+        setIsLoading(true);
         
-        // Check if this is a recovery flow
-        if (type !== 'recovery') {
-          throw new Error('Invalid reset link');
-        }
-
-        // Get the session to validate the token
+        // Get the current session
         const { data: { session }, error } = await supabase.auth.getSession();
 
         if (error || !session) {
-          throw error || new Error('Invalid or expired reset link');
+          throw new Error('Invalid or expired reset link');
         }
 
+        // Verify this is a recovery session
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('type') !== 'recovery') {
+          throw new Error('Invalid reset link type');
+        }
       } catch (error: any) {
-        console.error('Error validating reset token:', error);
+        console.error('Error validating session:', error);
         toast.error('Invalid or expired reset link');
         navigate('/signin');
       } finally {
@@ -49,8 +48,8 @@ const ResetPasswordForm: React.FC = () => {
       }
     };
 
-    validateResetToken();
-  }, [navigate, searchParams]);
+    validateSession();
+  }, [navigate]);
 
   const onSubmit = async (data: ResetPasswordFormValues) => {
     try {
@@ -60,11 +59,10 @@ const ResetPasswordForm: React.FC = () => {
 
       if (error) throw error;
 
-      toast.success('Password updated successfully!');
-      
-      // Sign out to ensure clean state
+      // Clear the session after password reset
       await supabase.auth.signOut();
       
+      toast.success('Password updated successfully! Please sign in with your new password.');
       navigate('/signin');
     } catch (error: any) {
       console.error('Error resetting password:', error);
