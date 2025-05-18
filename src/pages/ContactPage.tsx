@@ -33,17 +33,7 @@ const ContactPage: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="flex items-start">
-                    <Phone className="h-6 w-6 text-purple-600 mt-1" />
-                    <div className="ml-4">
-                      <h3 className="text-lg font-medium text-gray-900">Phone</h3>
-                      <p className="text-gray-600">
-                        Support Hours: Mon-Fri, 9am-5pm EST<br />
-                        <a href="tel:1-800-555-0123" className="text-purple-600 hover:text-purple-700">1-800-555-0123</a>
-                      </p>
-                    </div>
-                  </div>
-                  
+                
                   <div className="flex items-start">
                     <MapPin className="h-6 w-6 text-purple-600 mt-1" />
                     <div className="ml-4">
