@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import Input from '../ui/Input';
@@ -12,7 +12,6 @@ type ResetPasswordFormValues = {
 };
 
 const ResetPasswordForm: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(true);
   const {
     register,
     handleSubmit,
@@ -21,35 +20,6 @@ const ResetPasswordForm: React.FC = () => {
   } = useForm<ResetPasswordFormValues>();
   
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const validateSession = async () => {
-      try {
-        setIsLoading(true);
-        
-        // Get the current session
-        const { data: { session }, error } = await supabase.auth.getSession();
-
-        if (error || !session) {
-          throw new Error('Invalid or expired reset link');
-        }
-
-        // Verify this is a recovery session
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('type') !== 'recovery') {
-          throw new Error('Invalid reset link type');
-        }
-      } catch (error: any) {
-        console.error('Error validating session:', error);
-        toast.error('Invalid or expired reset link');
-        navigate('/signin');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    validateSession();
-  }, [navigate]);
 
   const onSubmit = async (data: ResetPasswordFormValues) => {
     try {
@@ -69,14 +39,6 @@ const ResetPasswordForm: React.FC = () => {
       toast.error(error.message || 'Failed to reset password');
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="text-center">
-        <p className="text-gray-600">Verifying reset link...</p>
-      </div>
-    );
-  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
