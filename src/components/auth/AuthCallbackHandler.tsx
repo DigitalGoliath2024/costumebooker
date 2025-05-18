@@ -13,21 +13,24 @@ const AuthCallbackHandler = () => {
       if (!hash) return;
 
       try {
-        // Check if this is a recovery flow
-        const params = new URLSearchParams(window.location.search);
-        const isRecovery = params.get('type') === 'recovery';
+        // Parse the hash parameters
+        const hashParams = new URLSearchParams(hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+        const type = hashParams.get('type');
 
-        if (isRecovery) {
-          // Get the session - if valid, we're already authenticated
-          const { data: { session } } = await supabase.auth.getSession();
-          
-          if (session) {
-            // Clean URL and redirect to reset password
-            window.history.replaceState({}, document.title, '/reset-password?type=recovery');
-            navigate('/reset-password?type=recovery');
-          } else {
-            throw new Error('Invalid or expired recovery link');
-          }
+        if (accessToken && refreshToken && type === 'recovery') {
+          // Set the session with the tokens
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
+
+          if (error) throw error;
+
+          // Clean URL and redirect to reset password
+          window.history.replaceState({}, document.title, '/reset-password?type=recovery');
+          navigate('/reset-password?type=recovery');
         }
       } catch (error: any) {
         console.error('Auth callback error:', error);
