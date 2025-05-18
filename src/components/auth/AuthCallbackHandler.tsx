@@ -8,22 +8,18 @@ const AuthCallbackHandler = () => {
 
   useEffect(() => {
     const handleAuthCallback = async () => {
-      const hash = window.location.hash;
-      
-      if (!hash) return;
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+      const type = params.get('type');
+
+      if (!token || !type) return;
 
       try {
-        // Parse the hash parameters
-        const hashParams = new URLSearchParams(hash.substring(1));
-        const accessToken = hashParams.get('access_token');
-        const refreshToken = hashParams.get('refresh_token');
-        const type = hashParams.get('type');
-
-        if (accessToken && refreshToken && type === 'recovery') {
-          // Set the session with the tokens
-          const { error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken
+        if (type === 'recovery') {
+          // Verify the recovery token
+          const { error } = await supabase.auth.verifyOtp({
+            token,
+            type: 'recovery'
           });
 
           if (error) throw error;
@@ -34,7 +30,7 @@ const AuthCallbackHandler = () => {
         }
       } catch (error: any) {
         console.error('Auth callback error:', error);
-        toast.error(error.message || 'Authentication error');
+        toast.error('Invalid or expired recovery link');
         navigate('/signin');
       }
     };
