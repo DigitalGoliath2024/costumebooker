@@ -19,7 +19,9 @@ type Inquiry = {
   is_read: boolean;
   event_type: string[];
   phone_number: string;
-  address: string;
+  city: string;
+  state: string;
+  zip: string;
 };
 
 const DashboardPage: React.FC = () => {
@@ -209,10 +211,6 @@ const DashboardPage: React.FC = () => {
     }
   };
 
-  const hasProfile = !!profile;
-  const isProfileComplete = hasProfile && profile.displayName && profile.bio && profile.state && profile.city;
-  const isPaid = profile?.paymentStatus === 'paid';
-
   if (loading) {
     return (
       <Layout>
@@ -230,7 +228,7 @@ const DashboardPage: React.FC = () => {
       <div className="bg-gray-50 min-h-screen py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-start mb-8">
-            <div>
+            <div className="mb-4 md:mb-0">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 Dashboard
               </h1>
@@ -238,7 +236,7 @@ const DashboardPage: React.FC = () => {
                 Manage your cosplay performer profile
               </p>
             </div>
-            <div className="mt-4 md:mt-0 flex items-center gap-4">
+            <div className="flex items-center gap-4">
               {isAdmin && (
                 <Link to="/admin">
                   <Button variant="outline" className="flex items-center">
@@ -254,7 +252,7 @@ const DashboardPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
             {/* Left Column - Account Info */}
             <div>
               <Card>
@@ -270,12 +268,12 @@ const DashboardPage: React.FC = () => {
                     <div>
                       <p className="text-sm font-medium text-gray-500">Account Status</p>
                       <div className="mt-1 flex items-center">
-                        <Badge variant={isPaid ? 'success' : 'warning'}>
-                          {isPaid ? 'Active' : 'Inactive'}
+                        <Badge variant={profile?.paymentStatus === 'paid' ? 'success' : 'warning'}>
+                          {profile?.paymentStatus === 'paid' ? 'Active' : 'Inactive'}
                         </Badge>
                       </div>
                     </div>
-                    {isPaid && profile?.paymentExpiry && (
+                    {profile?.paymentStatus === 'paid' && profile?.paymentExpiry && (
                       <div>
                         <p className="text-sm font-medium text-gray-500">Subscription Expires</p>
                         <p className="mt-1">{new Date(profile.paymentExpiry).toLocaleDateString()}</p>
@@ -313,7 +311,7 @@ const DashboardPage: React.FC = () => {
                       <DollarSign className="mr-3 h-5 w-5 text-purple-500" />
                       Manage Subscription
                     </Link>
-                    {isPaid && (
+                    {profile?.paymentStatus === 'paid' && (
                       <Link
                         to={`/profile/${profile.id}`}
                         className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-purple-700 hover:bg-purple-50"
@@ -335,7 +333,7 @@ const DashboardPage: React.FC = () => {
                   <CardTitle>Profile Status</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {!hasProfile ? (
+                  {!profile ? (
                     <div className="text-center py-6">
                       <h3 className="text-lg font-medium text-gray-900 mb-2">
                         Complete Your Profile
@@ -347,7 +345,7 @@ const DashboardPage: React.FC = () => {
                         <Button>Create Profile</Button>
                       </Link>
                     </div>
-                  ) : !isProfileComplete ? (
+                  ) : !profile.displayName || !profile.bio || !profile.state || !profile.city ? (
                     <div className="bg-yellow-50 p-4 rounded-md mb-6">
                       <h3 className="text-lg font-medium text-yellow-800 mb-2">
                         Profile Incomplete
@@ -359,7 +357,7 @@ const DashboardPage: React.FC = () => {
                         <Button variant="outline">Complete Profile</Button>
                       </Link>
                     </div>
-                  ) : !isPaid ? (
+                  ) : profile.paymentStatus !== 'paid' ? (
                     <div className="bg-blue-50 p-4 rounded-md mb-6">
                       <h3 className="text-lg font-medium text-blue-800 mb-2">
                         Activate Your Listing
@@ -443,11 +441,11 @@ const DashboardPage: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex items-start">
-                        <div className={`flex-shrink-0 h-5 w-5 rounded-full ${isPaid ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                        <div className={`flex-shrink-0 h-5 w-5 rounded-full ${profile?.paymentStatus === 'paid' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
                         <div className="ml-3">
                           <p className="text-sm font-medium text-gray-900">Payment</p>
                           <p className="text-sm text-gray-500">
-                            {isPaid 
+                            {profile?.paymentStatus === 'paid'
                               ? `Paid through ${new Date(profile?.paymentExpiry || '').toLocaleDateString()}` 
                               : 'Activate your listing ($29/year)'}
                           </p>
@@ -459,8 +457,8 @@ const DashboardPage: React.FC = () => {
               </Card>
 
               {/* Inquiries Card */}
-              {hasProfile && (
-                <Card className="mt-6">
+              {profile && (
+                <Card className="mt-8">
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle>Inquiries</CardTitle>
@@ -501,7 +499,7 @@ const DashboardPage: React.FC = () => {
                             <div>
                               <h4 className="text-sm font-medium text-gray-500">Contact Info</h4>
                               <p className="text-gray-900">{selectedInquiry.phone_number}</p>
-                              <p className="text-gray-600">{selectedInquiry.address}</p>
+                              <p className="text-gray-600">{selectedInquiry.city}, {selectedInquiry.state} {selectedInquiry.zip}</p>
                             </div>
                           </div>
                           

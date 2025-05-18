@@ -15,7 +15,9 @@ type FormData = {
   senderName: string;
   senderEmail: string;
   phoneNumber: string;
-  address: string;
+  city: string;
+  state: string;
+  zip: string;
   message: string;
   eventTypes: string[];
   captchaAnswer: string;
@@ -74,7 +76,9 @@ const ContactForm: React.FC<ContactFormProps> = ({ profileId, profileName }) => 
           sender_name: data.senderName,
           sender_email: data.senderEmail,
           phone_number: data.phoneNumber,
-          address: data.address,
+          city: data.city,
+          state: data.state,
+          zip: data.zip,
           message: data.message,
           event_type: data.eventTypes,
           captcha_answer: parseInt(data.captchaAnswer),
@@ -136,11 +140,23 @@ const ContactForm: React.FC<ContactFormProps> = ({ profileId, profileName }) => 
         error={errors.phoneNumber?.message}
       />
       
-      <Input
-        label="Address"
-        {...register('address', { required: 'Address is required' })}
-        error={errors.address?.message}
-      />
+      <div className="grid grid-cols-3 gap-4">
+        <Input
+          label="City"
+          {...register('city', { required: 'City is required' })}
+          error={errors.city?.message}
+        />
+        <Input
+          label="State"
+          {...register('state', { required: 'State is required' })}
+          error={errors.state?.message}
+        />
+        <Input
+          label="ZIP Code"
+          {...register('zip', { required: 'ZIP code is required' })}
+          error={errors.zip?.message}
+        />
+      </div>
 
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-700">
