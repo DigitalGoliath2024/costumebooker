@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import Input from '../ui/Input';
@@ -18,9 +18,39 @@ const ResetPasswordForm: React.FC = () => {
     watch,
     formState: { errors, isSubmitting },
   } = useForm<ResetPasswordFormValues>();
-  
-  const navigate = useNavigate();
 
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+
+  // 🔧 Step 1: Handle token from URL on page load
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.includes('access_token')) {
+      const queryParams = new URLSearchParams(hash.substring(1));
+      const access_token = queryParams.get('access_token');
+      const refresh_token = queryParams.get('refresh_token');
+
+      if (access_token && refresh_token) {
+        supabase.auth.setSession({ access_token, refresh_token }).then(({ error }) => {
+          if (error) {
+            toast.error('Invalid or expired recovery token.');
+            console.error('Session error:', error);
+            navigate('/signin');
+          } else {
+            setLoading(false); // Session restored, show form
+          }
+        });
+      } else {
+        toast.error('Missing recovery token.');
+        navigate('/signin');
+      }
+    } else {
+      toast.error('No recovery token in URL.');
+      navigate('/signin');
+    }
+  }, [navigate]);
+
+  // 🔐 Step 2: Handle form submission
   const onSubmit = async (data: ResetPasswordFormValues) => {
     try {
       const { error } = await supabase.auth.updateUser({
@@ -29,16 +59,18 @@ const ResetPasswordForm: React.FC = () => {
 
       if (error) throw error;
 
-      // Clear the session after password reset
       await supabase.auth.signOut();
-      
-      toast.success('Password updated successfully! Please sign in with your new password.');
+      toast.success('Password updated successfully! Please sign in.');
       navigate('/signin');
     } catch (error: any) {
       console.error('Error resetting password:', error);
       toast.error(error.message || 'Failed to reset password');
     }
   };
+
+  if (loading) {
+    return <p className="text-center py-6">Verifying token...</p>;
+  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
