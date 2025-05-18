@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Search, MapPin, Tag, Shield } from 'lucide-react';
 import Layout from '../components/layout/Layout';
 import Button from '../components/ui/Button';
@@ -11,10 +11,10 @@ import { STATES, type Profile } from '../types';
 import toast from 'react-hot-toast';
 
 const HERO_IMAGES = [
-  'https://i.ibb.co/TQnDCqP/20250516-1245-Easter-Bunny-Celebration-simple-compose-01jvczrnw9e7hbv0zp7eeb0vmk.png',
-  'https://i.ibb.co/Lzf28zTd/20250516-1210-Cosplay-Wizard-Party-simple-compose-01jvcxnspke3q9wmndgqez1wx2.png',
-  'https://i.ibb.co/NnyXcNbg/20250516-1227-Superhero-Birthday-Surprise-simple-compose-01jvcyn50ff1ht3a9v3vqvcsvr.png',
-  'https://i.ibb.co/ccjLqGVC/20250516-1255-Sci-Fi-Party-Poses-simple-compose-01jvd0abe2ewtam65fbeyex063.png'
+  'https://images.pexels.com/photos/2774556/pexels-photo-2774556.jpeg',
+  'https://images.pexels.com/photos/7144180/pexels-photo-7144180.jpeg',
+  'https://images.pexels.com/photos/6942436/pexels-photo-6942436.jpeg',
+  'https://images.pexels.com/photos/8107206/pexels-photo-8107206.jpeg'
 ];
 
 const HomePage: React.FC = () => {
@@ -63,6 +63,7 @@ const HomePage: React.FC = () => {
           `)
           .eq('is_active', true)
           .eq('payment_status', 'paid')
+          .order('created_at', { ascending: false })
           .limit(8);
 
         if (supabaseError) {
@@ -86,11 +87,14 @@ const HomePage: React.FC = () => {
             paymentStatus: item.payment_status,
             paymentExpiry: item.payment_expiry,
             categories: item.profile_categories.map((c: any) => c.category),
-            images: item.profile_images.map((img: any) => ({
-              id: img.id,
-              url: img.image_url,
-              position: img.position,
-            })),
+            images: item.profile_images
+              .filter((img: any) => img.image_url) // Filter out any null URLs
+              .sort((a: any, b: any) => a.position - b.position)
+              .map((img: any) => ({
+                id: img.id,
+                url: img.image_url,
+                position: img.position,
+              })),
           }));
           setFeaturedProfiles(profiles);
         }
@@ -124,109 +128,6 @@ const HomePage: React.FC = () => {
       toast.error(error.message || 'Failed to start checkout process');
     }
   };
-
-  // For demo purposes, using placeholder data
-  const placeholderProfiles: Profile[] = [
-    {
-      id: '1',
-      displayName: 'Captain Marvel',
-      bio: 'Professional superhero cosplayer with 5+ years of experience',
-      state: 'CA',
-      city: 'Los Angeles',
-      priceMin: 150,
-      priceMax: 300,
-      facebook: 'captainmarvel',
-      instagram: 'captainmarvel',
-      tiktok: 'captainmarvel',
-      twitter: 'captainmarvel',
-      isActive: true,
-      paymentStatus: 'paid',
-      paymentExpiry: '2025-12-31',
-      categories: ['Hero', 'Comic Book Character'],
-      images: [
-        {
-          id: '1-1',
-          url: 'https://images.pexels.com/photos/6942436/pexels-photo-6942436.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-          position: 0,
-        },
-      ],
-    },
-    {
-      id: '2',
-      displayName: 'Joker',
-      bio: 'Award-winning villain cosplayer available for events',
-      state: 'NY',
-      city: 'New York City',
-      priceMin: 200,
-      priceMax: 400,
-      facebook: 'joker',
-      instagram: 'joker',
-      tiktok: null,
-      twitter: 'joker',
-      isActive: true,
-      paymentStatus: 'paid',
-      paymentExpiry: '2025-12-31',
-      categories: ['Villain', 'Comic Book Character'],
-      images: [
-        {
-          id: '2-1',
-          url: 'https://images.pexels.com/photos/8107206/pexels-photo-8107206.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-          position: 0,
-        },
-      ],
-    },
-    {
-      id: '3',
-      displayName: 'Princess Zelda',
-      bio: 'Video game character cosplayer specializing in fantasy worlds',
-      state: 'WA',
-      city: 'Seattle',
-      priceMin: 125,
-      priceMax: 250,
-      facebook: 'zelda',
-      instagram: 'zelda',
-      tiktok: 'zelda',
-      twitter: null,
-      isActive: true,
-      paymentStatus: 'paid',
-      paymentExpiry: '2025-12-31',
-      categories: ['Video Game Character', 'Fantasy'],
-      images: [
-        {
-          id: '3-1',
-          url: 'https://images.pexels.com/photos/7144180/pexels-photo-7144180.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-          position: 0,
-        },
-      ],
-    },
-    {
-      id: '4',
-      displayName: 'Naruto',
-      bio: 'Anime cosplayer with authentic costume and character portrayal',
-      state: 'FL',
-      city: 'Miami',
-      priceMin: 100,
-      priceMax: 200,
-      facebook: 'naruto',
-      instagram: 'naruto',
-      tiktok: 'naruto',
-      twitter: 'naruto',
-      isActive: true,
-      paymentStatus: 'paid',
-      paymentExpiry: '2025-12-31',
-      categories: ['Anime/Manga'],
-      images: [
-        {
-          id: '4-1',
-          url: 'https://images.pexels.com/photos/12454899/pexels-photo-12454899.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-          position: 0,
-        },
-      ],
-    },
-  ];
-
-  // Use real data if available, otherwise use placeholder data
-  const displayProfiles = featuredProfiles.length > 0 ? featuredProfiles : placeholderProfiles;
 
   return (
     <Layout>
@@ -273,28 +174,6 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Search Section */}
-      <section className="bg-white py-8 border-b border-accent-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between">
-            <div className="mb-4 md:mb-0">
-              <h2 className="text-2xl font-bold text-accent-900">
-                Find Costumed Performers Near You
-              </h2>
-              <p className="text-accent-600">
-                Browse our directory of talented performers by location or category
-              </p>
-            </div>
-            <Link to="/search">
-              <Button className="flex items-center">
-                <Search className="mr-2 h-5 w-5" />
-                Advanced Search
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
       {/* Featured Performers */}
       <section className="bg-accent-50 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -316,7 +195,7 @@ const HomePage: React.FC = () => {
               <p className="text-red-500">{error}</p>
             </div>
           ) : (
-            <ProfileGrid profiles={displayProfiles} />
+            <ProfileGrid profiles={featuredProfiles} />
           )}
 
           <div className="text-center mt-10">

@@ -11,6 +11,7 @@ type ProfileCardProps = {
 };
 
 const ProfileCard: React.FC<ProfileCardProps> = ({ profile }) => {
+  // Get the main image (position 0) or first available image
   const mainImage = profile.images.find(img => img.position === 0) || profile.images[0];
   const imageUrl = mainImage?.url || 'https://images.pexels.com/photos/1036623/pexels-photo-1036623.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2';
 
@@ -22,6 +23,10 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile }) => {
             src={imageUrl}
             alt={profile.displayName}
             className="w-full h-full object-cover"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.src = 'https://images.pexels.com/photos/1036623/pexels-photo-1036623.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2';
+            }}
           />
         </div>
         <CardContent className="p-4">
