@@ -249,7 +249,7 @@ const HomePage: React.FC = () => {
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
             <div className="max-w-3xl">
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
-                Find the Perfect Cosplay Performer for Your Event
+                Find the Perfect Costumed Performer for Your Event
               </h1>
               <p className="text-xl mb-8 text-white/90">
                 Connect with professional cosplayers, superheroes, anime characters, and more across the United States.
@@ -279,7 +279,7 @@ const HomePage: React.FC = () => {
           <div className="flex flex-col md:flex-row items-center justify-between">
             <div className="mb-4 md:mb-0">
               <h2 className="text-2xl font-bold text-accent-900">
-                Find Cosplay Performers Near You
+                Find Costumed Performers Near You
               </h2>
               <p className="text-accent-600">
                 Browse our directory of talented performers by location or category
@@ -303,7 +303,7 @@ const HomePage: React.FC = () => {
               Featured Performers
             </h2>
             <p className="text-xl text-accent-600 max-w-3xl mx-auto">
-              Discover our top cosplay performers available for events, parties, and conventions
+              Discover our top costumed performers available for events, parties, and conventions
             </p>
           </div>
 
@@ -335,7 +335,7 @@ const HomePage: React.FC = () => {
               Browse by State
             </h2>
             <p className="text-xl text-accent-600 max-w-3xl mx-auto">
-              Find cosplay performers in your area
+              Find costumed performers in your area
             </p>
           </div>
 
@@ -414,7 +414,7 @@ const HomePage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-3xl font-bold mb-4">
-              Are You a Cosplay Performer?
+              Are You a Costumed Performer?
             </h2>
             <p className="text-xl mb-8 max-w-3xl mx-auto text-white/90">
               Join our directory to connect with fans and event organizers. Create your listing today for just $29 per year.
