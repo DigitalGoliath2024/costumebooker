@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { VenetianMask as Mask, Search, User, Menu, X } from 'lucide-react';
+import { Search, User, Menu, X } from 'lucide-react';
 import Button from '../ui/Button';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -30,7 +30,11 @@ const Header: React.FC = () => {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 flex items-center">
-              <Mask className="h-8 w-8 text-purple-700" />
+              <img 
+                src="https://i.ibb.co/XkyZrxvH/costumecameos-logo-1200x1200.png" 
+                alt="CostumeCameos Logo" 
+                className="h-8 w-8 object-contain"
+              />
               <span className="ml-2 text-xl font-bold text-gray-900">CostumeCameos</span>
             </Link>
             <nav className="hidden md:ml-6 md:flex md:space-x-8">
