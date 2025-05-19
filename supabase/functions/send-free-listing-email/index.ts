@@ -9,7 +9,14 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log('Request received:', {
+    method: req.method,
+    url: req.url,
+    headers: Object.fromEntries(req.headers.entries())
+  });
+
   if (req.method === 'OPTIONS') {
+    console.log('Handling OPTIONS request');
     return new Response(null, { 
       status: 204,
       headers: corsHeaders
@@ -17,6 +24,7 @@ serve(async (req) => {
   }
 
   if (req.method !== 'POST') {
+    console.log('Invalid method:', req.method);
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
       headers: corsHeaders,
@@ -24,8 +32,28 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Processing POST request');
+
+    // Log SMTP configuration
+    console.log('SMTP Configuration:', {
+      host: Deno.env.get('SMTP_HOST'),
+      port: Deno.env.get('SMTP_PORT'),
+      user: Deno.env.get('SMTP_USER'),
+      // Don't log password
+      hasPassword: !!Deno.env.get('SMTP_PASS')
+    });
+
+    // Parse form data
+    console.log('Parsing form data');
     const formData = await req.formData();
     const data = Object.fromEntries(formData.entries());
+    
+    // Log parsed data (excluding sensitive info)
+    console.log('Parsed form data:', {
+      ...data,
+      email: '[REDACTED]',
+      phone: '[REDACTED]'
+    });
 
     // Validate SMTP credentials
     const smtpHost = Deno.env.get('SMTP_HOST');
@@ -34,9 +62,17 @@ serve(async (req) => {
     const smtpPass = Deno.env.get('SMTP_PASS');
 
     if (!smtpHost || !smtpPort || !smtpUser || !smtpPass) {
+      console.error('Missing SMTP credentials:', {
+        hasHost: !!smtpHost,
+        hasPort: !!smtpPort,
+        hasUser: !!smtpUser,
+        hasPass: !!smtpPass
+      });
       throw new Error('Missing SMTP credentials');
     }
 
+    console.log('Initializing SMTP client');
+    
     // Set up SMTP client
     const client = new SmtpClient({
       connection: {
@@ -51,6 +87,7 @@ serve(async (req) => {
     });
 
     // Format email content
+    console.log('Formatting email content');
     const emailContent = `
 New Free Listing Application
 
@@ -95,6 +132,7 @@ Questions/Notes: ${data.questions || 'Not provided'}
     `;
 
     try {
+      console.log('Attempting to send email');
       await client.send({
         from: 'noreply@costumecameos.com',
         to: 'support@costumecameos.com',
@@ -103,18 +141,28 @@ Questions/Notes: ${data.questions || 'Not provided'}
         html: emailContent.replace(/\n/g, '<br>'),
       });
 
+      console.log('Email sent successfully');
       return new Response(JSON.stringify({ success: true }), {
         status: 200,
         headers: corsHeaders,
       });
     } catch (error) {
-      console.error('SMTP error:', error);
+      console.error('SMTP error:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      });
       throw new Error(`Failed to send email: ${error.message}`);
     } finally {
+      console.log('Closing SMTP client');
       await client.close();
     }
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error processing request:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    });
     return new Response(JSON.stringify({ 
       error: 'Failed to process application', 
       details: error.message 
