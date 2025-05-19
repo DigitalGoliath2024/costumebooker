@@ -25,7 +25,7 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="bg-black shadow-sm">
+    <header className="bg-black shadow-sm py-2">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
@@ -68,7 +68,7 @@ const Header: React.FC = () => {
               {user ? (
                 <div className="flex items-center space-x-4">
                   <Link to="/dashboard">
-                    <Button variant="outline" size="sm" className="text-gray-300 border-gray-700 hover:text-white hover:border-gray-600">
+                    <Button variant="outline" size="sm">
                       Dashboard
                     </Button>
                   </Link>
@@ -79,12 +79,12 @@ const Header: React.FC = () => {
               ) : (
                 <div className="flex items-center space-x-4">
                   <Link to="/signin">
-                    <Button variant="outline" size="sm" className="text-gray-300 border-gray-700 hover:text-white hover:border-gray-600">
+                    <Button variant="outline" size="sm">
                       Sign In
                     </Button>
                   </Link>
                   <Link to="/signup">
-                    <Button variant="primary" size="sm">
+                    <Button variant="outline" size="sm">
                       Sign Up
                     </Button>
                   </Link>
