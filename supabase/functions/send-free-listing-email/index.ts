@@ -1,10 +1,11 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
+import { multiParser } from 'https://deno.land/x/multiparser@0.114.0/mod.ts';
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://costumecameos.com',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Headers': '*',
   'Content-Type': 'application/json',
 };
 
@@ -15,6 +16,7 @@ serve(async (req) => {
     headers: Object.fromEntries(req.headers.entries())
   });
 
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     console.log('Handling OPTIONS request');
     return new Response(null, { 
@@ -34,46 +36,41 @@ serve(async (req) => {
   try {
     console.log('Processing POST request');
 
-    // Log SMTP configuration
-    console.log('SMTP Configuration:', {
-      host: Deno.env.get('SMTP_HOST'),
-      port: Deno.env.get('SMTP_PORT'),
-      user: Deno.env.get('SMTP_USER'),
-      // Don't log password
-      hasPassword: !!Deno.env.get('SMTP_PASS')
-    });
-
-    // Parse form data
-    console.log('Parsing form data');
-    const formData = await req.formData();
-    const data = Object.fromEntries(formData.entries());
-    
-    // Log parsed data (excluding sensitive info)
-    console.log('Parsed form data:', {
-      ...data,
-      email: '[REDACTED]',
-      phone: '[REDACTED]'
-    });
-
-    // Validate SMTP credentials
+    // Validate SMTP configuration
     const smtpHost = Deno.env.get('SMTP_HOST');
     const smtpPort = Number(Deno.env.get('SMTP_PORT'));
     const smtpUser = Deno.env.get('SMTP_USER');
     const smtpPass = Deno.env.get('SMTP_PASS');
 
+    console.log('SMTP Configuration:', {
+      host: smtpHost,
+      port: smtpPort,
+      user: smtpUser,
+      hasPassword: !!smtpPass
+    });
+
     if (!smtpHost || !smtpPort || !smtpUser || !smtpPass) {
-      console.error('Missing SMTP credentials:', {
-        hasHost: !!smtpHost,
-        hasPort: !!smtpPort,
-        hasUser: !!smtpUser,
-        hasPass: !!smtpPass
-      });
-      throw new Error('Missing SMTP credentials');
+      console.error('Missing SMTP credentials');
+      throw new Error('Server configuration error');
     }
 
-    console.log('Initializing SMTP client');
+    // Parse multipart form data
+    console.log('Parsing form data');
+    const formData = await multiParser(req);
+    console.log('Form data parsed:', {
+      fields: Object.keys(formData.fields),
+      files: formData.files?.length || 0
+    });
+
+    const data = formData.fields;
     
-    // Set up SMTP client
+    if (!data.fullName || !data.email) {
+      console.error('Missing required fields');
+      throw new Error('Missing required fields');
+    }
+
+    // Initialize SMTP client
+    console.log('Initializing SMTP client');
     const client = new SmtpClient({
       connection: {
         hostname: smtpHost,
@@ -132,7 +129,7 @@ Questions/Notes: ${data.questions || 'Not provided'}
     `;
 
     try {
-      console.log('Attempting to send email');
+      console.log('Sending email');
       await client.send({
         from: 'noreply@costumecameos.com',
         to: 'support@costumecameos.com',
@@ -142,27 +139,20 @@ Questions/Notes: ${data.questions || 'Not provided'}
       });
 
       console.log('Email sent successfully');
-      return new Response(JSON.stringify({ success: true }), {
-        status: 200,
-        headers: corsHeaders,
-      });
     } catch (error) {
-      console.error('SMTP error:', {
-        name: error.name,
-        message: error.message,
-        stack: error.stack,
-      });
+      console.error('SMTP error:', error);
       throw new Error(`Failed to send email: ${error.message}`);
     } finally {
-      console.log('Closing SMTP client');
       await client.close();
+      console.log('SMTP client closed');
     }
-  } catch (error) {
-    console.error('Error processing request:', {
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
+
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: corsHeaders,
     });
+  } catch (error) {
+    console.error('Error processing request:', error);
     return new Response(JSON.stringify({ 
       error: 'Failed to process application', 
       details: error.message 
