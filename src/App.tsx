@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider } from './contexts/AuthContext';
 import AuthCallbackHandler from './components/auth/AuthCallbackHandler';
 
@@ -29,38 +30,40 @@ import SafetyFirstPage from './pages/SafetyFirstPage';
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <AuthCallbackHandler />
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/browse" element={<BrowsePage />} />
-          <Route path="/browse/:stateAbbr" element={<BrowsePage />} />
-          <Route path="/categories" element={<CategoryPage />} />
-          <Route path="/categories/:categoryName" element={<CategoryPage />} />
-          <Route path="/profile/:id" element={<ProfilePage />} />
-          <Route path="/signup" element={<SignUpPage />} />
-          <Route path="/signin" element={<SignInPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/guidelines" element={<GuidelinesPage />} />
-          <Route path="/faq" element={<FAQPage />} />
-          <Route path="/terms" element={<TermsPage />} />
-          <Route path="/privacy" element={<PrivacyPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/dashboard/edit-profile" element={<EditProfilePage />} />
-          <Route path="/dashboard/edit-profile/:id" element={<EditProfilePage />} />
-          <Route path="/dashboard/manage-images" element={<ManageImagesPage />} />
-          <Route path="/dashboard/subscription" element={<ManageSubscriptionPage />} />
-          <Route path="/dashboard/preview" element={<PreviewProfilePage />} />
-          <Route path="/admin" element={<AdminDashboardPage />} />
-          <Route path="/safety-first" element={<SafetyFirstPage />} />
-        </Routes>
-        <Toaster position="top-right" />
-      </Router>
-    </AuthProvider>
+    <HelmetProvider>
+      <AuthProvider>
+        <Router>
+          <AuthCallbackHandler />
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/browse" element={<BrowsePage />} />
+            <Route path="/browse/:stateAbbr" element={<BrowsePage />} />
+            <Route path="/categories" element={<CategoryPage />} />
+            <Route path="/categories/:categoryName" element={<CategoryPage />} />
+            <Route path="/profile/:id" element={<ProfilePage />} />
+            <Route path="/signup" element={<SignUpPage />} />
+            <Route path="/signin" element={<SignInPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/guidelines" element={<GuidelinesPage />} />
+            <Route path="/faq" element={<FAQPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/dashboard/edit-profile" element={<EditProfilePage />} />
+            <Route path="/dashboard/edit-profile/:id" element={<EditProfilePage />} />
+            <Route path="/dashboard/manage-images" element={<ManageImagesPage />} />
+            <Route path="/dashboard/subscription" element={<ManageSubscriptionPage />} />
+            <Route path="/dashboard/preview" element={<PreviewProfilePage />} />
+            <Route path="/admin" element={<AdminDashboardPage />} />
+            <Route path="/safety-first" element={<SafetyFirstPage />} />
+          </Routes>
+          <Toaster position="top-right" />
+        </Router>
+      </AuthProvider>
+    </HelmetProvider>
   );
 }
 

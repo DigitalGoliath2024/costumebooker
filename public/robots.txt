@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard/
+Disallow: /admin/
+Disallow: /signin
+Disallow: /signup
+Disallow: /reset-password
+Disallow: /forgot-password
+
+Sitemap: https://costumecameos.com/sitemap.xml

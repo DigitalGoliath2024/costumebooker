@@ -22,7 +22,8 @@
     "@uploadthing/react": "^6.2.4",
     "uploadthing": "^6.4.1",
     "react-dropzone": "^14.2.3",
-    "react-beautiful-dnd": "^13.1.1"
+    "react-beautiful-dnd": "^13.1.1",
+    "react-helmet-async": "^2.0.4"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
