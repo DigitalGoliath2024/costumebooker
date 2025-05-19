@@ -4,6 +4,7 @@ import { Search, MapPin, Tag, Shield } from 'lucide-react';
 import Layout from '../components/layout/Layout';
 import Button from '../components/ui/Button';
 import ProfileGrid from '../components/profile/ProfileGrid';
+import SEO from '../components/SEO';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { redirectToCheckout } from '../lib/stripe';
@@ -24,6 +25,19 @@ const HomePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "CostumeCameos",
+    "url": "https://costumecameos.com",
+    "description": "Connect with cosplay performers, superheroes, anime characters, and more for your events across the United States.",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://costumecameos.com/search?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -230,6 +244,13 @@ const HomePage: React.FC = () => {
 
   return (
     <Layout>
+      <SEO 
+        title="Find Cosplay Performers Near You"
+        description="Connect with professional cosplay performers, superheroes, anime characters, and more for your events. Browse our directory of talented performers across the United States."
+        canonicalUrl="https://costumecameos.com"
+        jsonLd={jsonLd}
+      />
+      
       {/* Hero Section */}
       <section className="relative h-[600px] overflow-hidden mt-5">
         {HERO_IMAGES.map((image, index) => (
