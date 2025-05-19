@@ -33,7 +33,7 @@ const Header: React.FC = () => {
               <img 
                 src="https://i.ibb.co/XkyZrxvH/costumecameos-logo-1200x1200.png" 
                 alt="CostumeCameos Logo" 
-                className="h-15 w-15 object-contain"
+                className="h-10 w-10 object-contain"
               />
               <span className="ml-2 text-xl font-bold text-gray-900">CostumeCameos</span>
             </Link>
