@@ -3,9 +3,9 @@ import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
 import { multiParser } from 'https://deno.land/x/multiparser@0.114.0/mod.ts';
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://costumecameos.com',
+  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': '*',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   'Content-Type': 'application/json',
 };
 
@@ -36,6 +36,21 @@ serve(async (req) => {
   try {
     console.log('Processing POST request');
 
+    // Parse form data
+    console.log('Parsing form data');
+    const formData = await req.formData();
+    console.log('Form data parsed:', {
+      fields: Array.from(formData.entries()).map(([key]) => key)
+    });
+
+    // Extract form fields
+    const data = Object.fromEntries(formData.entries());
+    
+    if (!data.fullName || !data.email) {
+      console.error('Missing required fields');
+      throw new Error('Missing required fields');
+    }
+
     // Validate SMTP configuration
     const smtpHost = Deno.env.get('SMTP_HOST');
     const smtpPort = Number(Deno.env.get('SMTP_PORT'));
@@ -52,21 +67,6 @@ serve(async (req) => {
     if (!smtpHost || !smtpPort || !smtpUser || !smtpPass) {
       console.error('Missing SMTP credentials');
       throw new Error('Server configuration error');
-    }
-
-    // Parse multipart form data
-    console.log('Parsing form data');
-    const formData = await multiParser(req);
-    console.log('Form data parsed:', {
-      fields: Object.keys(formData.fields),
-      files: formData.files?.length || 0
-    });
-
-    const data = formData.fields;
-    
-    if (!data.fullName || !data.email) {
-      console.error('Missing required fields');
-      throw new Error('Missing required fields');
     }
 
     // Initialize SMTP client
