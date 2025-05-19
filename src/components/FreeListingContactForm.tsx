@@ -6,6 +6,7 @@ import Select from './ui/Select';
 import Textarea from './ui/Textarea';
 import Button from './ui/Button';
 import { STATES } from '../types';
+import toast from 'react-hot-toast';
 
 type FormData = {
   fullName: string;
@@ -36,6 +37,7 @@ const FreeListingContactForm: React.FC = () => {
     register,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm<FormData>();
 
   const onSubmit = async (data: FormData) => {
@@ -51,28 +53,52 @@ const FreeListingContactForm: React.FC = () => {
         formData.append('files', file);
       });
 
-      const response = await fetch('/api/free-listing', {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-free-listing-email`, {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error('Failed to submit form');
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to submit form');
       }
 
-      // Show success message and redirect
-    } catch (error) {
+      toast.success('Application submitted successfully! We\'ll review it and get back to you soon.');
+      reset();
+      setFiles([]);
+    } catch (error: any) {
       console.error('Error submitting form:', error);
-      // Show error message
+      toast.error(error.message || 'Failed to submit application. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      setFiles(Array.from(event.target.files));
+    const selectedFiles = Array.from(event.target.files || []);
+    const validFiles = selectedFiles.filter(file => {
+      const isValidType = ['image/jpeg', 'image/png', 'application/pdf'].includes(file.type);
+      const isValidSize = file.size <= 10 * 1024 * 1024; // 10MB
+      return isValidType && isValidSize;
+    });
+
+    if (validFiles.length !== selectedFiles.length) {
+      toast.error('Some files were skipped. Please ensure files are JPG, PNG, or PDF and under 10MB.');
     }
+
+    if (validFiles.length + files.length > 5) {
+      toast.error('Maximum 5 files allowed.');
+      return;
+    }
+
+    setFiles(prevFiles => [...prevFiles, ...validFiles].slice(0, 5));
+  };
+
+  const removeFile = (index: number) => {
+    setFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
   };
 
   return (
@@ -220,17 +246,26 @@ const FreeListingContactForm: React.FC = () => {
             >
               <Upload className="h-12 w-12 text-gray-400" />
               <span className="mt-2 text-sm text-gray-600">
-                Upload photos, testimonials, or booking proof
+                Upload photos, testimonials, or booking proof (max 5 files)
               </span>
               <span className="mt-1 text-xs text-gray-500">
-                (JPG, PNG, PDF up to 10MB each)
+                JPG, PNG, PDF up to 10MB each
               </span>
             </label>
           </div>
           {files.length > 0 && (
-            <ul className="text-sm text-gray-600">
+            <ul className="space-y-2">
               {files.map((file, index) => (
-                <li key={index}>{file.name}</li>
+                <li key={index} className="flex items-center justify-between text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                  <span>{file.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeFile(index)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    Remove
+                  </button>
+                </li>
               ))}
             </ul>
           )}
