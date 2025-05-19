@@ -27,6 +27,7 @@ import ManageSubscriptionPage from './pages/ManageSubscriptionPage';
 import PreviewProfilePage from './pages/PreviewProfilePage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import SafetyFirstPage from './pages/SafetyFirstPage';
+import FreeListingContactPage from './pages/FreeListingContactPage';
 
 function App() {
   return (
@@ -52,6 +53,7 @@ function App() {
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/contact" element={<ContactPage />} />
+            <Route path="/free-listing" element={<FreeListingContactPage />} />
             <Route path="/dashboard/edit-profile" element={<EditProfilePage />} />
             <Route path="/dashboard/edit-profile/:id" element={<EditProfilePage />} />
             <Route path="/dashboard/manage-images" element={<ManageImagesPage />} />

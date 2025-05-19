@@ -5,6 +5,7 @@ import Layout from '../components/layout/Layout';
 import Button from '../components/ui/Button';
 import ProfileGrid from '../components/profile/ProfileGrid';
 import SEO from '../components/SEO';
+import HomePagePopup from '../components/HomePagePopup';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { redirectToCheckout } from '../lib/stripe';
@@ -450,6 +451,8 @@ const HomePage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      <HomePagePopup />
     </Layout>
   );
 };
