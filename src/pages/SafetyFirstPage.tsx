@@ -50,7 +50,7 @@ const SafetyFirstPage: React.FC = () => {
                     <h3 className="text-xl font-semibold text-gray-900">2. Communicate Clearly</h3>
                     <ul className="mt-2 space-y-2">
                       <li><strong>Use Official Channels:</strong> Whenever possible, communicate through official platforms or email addresses.</li>
-                      <li><strong>Document Everything:</strong> Keep records of all communications, agreements, and transactions.</li>
+                      <li><strong>Document Everything:</strong> Keep records of all communications, agreements, and transactions. </li>
                     </ul>
                   </section>
 
