@@ -4,6 +4,7 @@ import Layout from '../components/layout/Layout';
 import ProfileGrid from '../components/profile/ProfileGrid';
 import LocationFilter from '../components/profile/LocationFilter';
 import CategoryFilter from '../components/profile/CategoryFilter';
+import SEO from '../components/SEO';
 import { supabase } from '../lib/supabase';
 import { STATES, type Profile } from '../types';
 import toast from 'react-hot-toast';
@@ -18,13 +19,55 @@ const BrowsePage: React.FC = () => {
   const [selectedCity, setSelectedCity] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
+  // Get state name for display and SEO
+  const stateName = selectedState 
+    ? STATES.find(state => state.abbreviation === selectedState)?.name 
+    : 'All States';
+
+  // Build SEO title and description
+  const seoTitle = selectedState && selectedCity
+    ? `Find Cosplay Performers in ${selectedCity}, ${selectedState}`
+    : selectedState
+    ? `Find Cosplay Performers in ${stateName}`
+    : 'Find Cosplay Performers Near You';
+
+  const seoDescription = selectedState && selectedCity
+    ? `Book talented cosplay performers, character actors, and costume entertainers in ${selectedCity}, ${selectedState}. Browse local performers for birthday parties, events, and conventions.`
+    : selectedState
+    ? `Find and hire cosplay performers and character entertainers in ${stateName}. Browse local talent for parties, events, conventions, and special occasions.`
+    : 'Connect with professional cosplay performers and character entertainers near you. Browse local talent for birthday parties, conventions, and special events across the United States.';
+
+  // Build JSON-LD schema
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: seoTitle,
+    description: seoDescription,
+    provider: {
+      '@type': 'Organization',
+      name: 'CostumeCameos',
+      url: 'https://costumecameos.com'
+    },
+    ...(selectedState && {
+      areaServed: {
+        '@type': 'State',
+        name: stateName,
+        ...(selectedCity && {
+          containsPlace: {
+            '@type': 'City',
+            name: selectedCity
+          }
+        })
+      }
+    })
+  };
+
   useEffect(() => {
     const fetchProfiles = async () => {
       try {
         setLoading(true);
         setError(null);
         
-        // Build the base query
         let query = supabase
           .from('profiles')
           .select(`
@@ -47,7 +90,7 @@ const BrowsePage: React.FC = () => {
           `)
           .eq('is_active', true)
           .eq('payment_status', 'paid')
-          .not('display_name', 'is', null); // Ensure profile is complete
+          .not('display_name', 'is', null);
 
         if (selectedState) {
           query = query.eq('state', selectedState);
@@ -69,7 +112,6 @@ const BrowsePage: React.FC = () => {
           return;
         }
 
-        // Map and filter the profiles
         const mappedProfiles: Profile[] = data.map(item => ({
           id: item.id,
           displayName: item.display_name,
@@ -93,7 +135,6 @@ const BrowsePage: React.FC = () => {
           })),
         }));
 
-        // Filter by categories if any are selected
         let filteredProfiles = mappedProfiles;
         if (selectedCategories.length > 0) {
           filteredProfiles = mappedProfiles.filter((profile) =>
@@ -116,13 +157,15 @@ const BrowsePage: React.FC = () => {
     fetchProfiles();
   }, [selectedState, selectedCity, selectedCategories]);
 
-  // Get state name for display
-  const stateName = selectedState 
-    ? STATES.find(state => state.abbreviation === selectedState)?.name 
-    : 'All States';
-
   return (
     <Layout>
+      <SEO 
+        title={seoTitle}
+        description={seoDescription}
+        canonicalUrl={`https://costumecameos.com/browse${selectedState ? `/${selectedState}` : ''}`}
+        jsonLd={jsonLd}
+      />
+
       <div className="bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row justify-between items-start mb-8">
