@@ -25,7 +25,7 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="bg-white shadow-sm">
+    <header className="bg-black shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
@@ -35,24 +35,24 @@ const Header: React.FC = () => {
                 alt="CostumeCameos Logo" 
                 className="h-12 w-12 object-contain"
               />
-              <span className="ml-2 text-xl font-bold text-gray-900">CostumeCameos</span>
+              <span className="ml-2 text-xl font-bold text-white-900">CostumeCameos</span>
             </Link>
             <nav className="hidden md:ml-6 md:flex md:space-x-8">
               <Link
                 to="/browse"
-                className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 border-b-2 border-transparent hover:border-purple-500"
+                className="inline-flex items-center px-1 pt-1 text-sm font-medium text-white-900 border-b-2 border-transparent hover:border-purple-500"
               >
                 Browse
               </Link>
               <Link
                 to="/categories"
-                className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 border-b-2 border-transparent hover:border-purple-500"
+                className="inline-flex items-center px-1 pt-1 text-sm font-medium text-white-900 border-b-2 border-transparent hover:border-purple-500"
               >
                 Categories
               </Link>
               <Link
                 to="/about"
-                className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 border-b-2 border-transparent hover:border-purple-500"
+                className="inline-flex items-center px-1 pt-1 text-sm font-medium text-white-900 border-b-2 border-transparent hover:border-purple-500"
               >
                 About
               </Link>
