@@ -23,16 +23,47 @@ type Message = {
   profile_id: string;
 };
 
+type FreeListingRequest = {
+  id: string;
+  created_at: string;
+  full_name: string;
+  email: string;
+  phone: string | null;
+  city: string;
+  state: string;
+  instagram: string | null;
+  facebook: string | null;
+  youtube: string | null;
+  tiktok: string | null;
+  website: string | null;
+  experience: string;
+  paid_events: string;
+  event_types: string | null;
+  characters: string | null;
+  bio: string;
+  travel: string;
+  why_join: string | null;
+  questions: string | null;
+  status: 'pending' | 'approved' | 'rejected';
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+  notes: string | null;
+};
+
 const AdminDashboardPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [freeListingRequests, setFreeListingRequests] = useState<FreeListingRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<FreeListingRequest | null>(null);
   const [showMessageDetails, setShowMessageDetails] = useState(false);
+  const [showRequestDetails, setShowRequestDetails] = useState(false);
   const [deletingMessageId, setDeletingMessageId] = useState<string | null>(null);
+  const [deletingRequestId, setDeletingRequestId] = useState<string | null>(null);
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -106,6 +137,14 @@ const AdminDashboardPage: React.FC = () => {
 
         if (messageError) throw messageError;
 
+        // Fetch free listing requests
+        const { data: requestData, error: requestError } = await supabase
+          .from('free_listing_requests')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (requestError) throw requestError;
+
         if (profileData) {
           const mappedProfiles: Profile[] = profileData.map(item => ({
             id: item.id,
@@ -135,6 +174,10 @@ const AdminDashboardPage: React.FC = () => {
 
         if (messageData) {
           setMessages(messageData);
+        }
+
+        if (requestData) {
+          setFreeListingRequests(requestData);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -200,6 +243,72 @@ const AdminDashboardPage: React.FC = () => {
     }
   };
 
+  const handleDeleteRequest = async (requestId: string) => {
+    if (!window.confirm('Are you sure you want to delete this request?')) {
+      return;
+    }
+
+    try {
+      setDeletingRequestId(requestId);
+
+      const { error } = await supabase
+        .from('free_listing_requests')
+        .delete()
+        .eq('id', requestId);
+
+      if (error) throw error;
+
+      setFreeListingRequests(prev => prev.filter(request => request.id !== requestId));
+      
+      if (selectedRequest?.id === requestId) {
+        setSelectedRequest(null);
+        setShowRequestDetails(false);
+      }
+
+      toast.success('Request deleted successfully');
+    } catch (error: any) {
+      console.error('Error deleting request:', error);
+      toast.error(error.message || 'Failed to delete request');
+    } finally {
+      setDeletingRequestId(null);
+    }
+  };
+
+  const handleUpdateRequestStatus = async (requestId: string, status: 'approved' | 'rejected', notes?: string) => {
+    try {
+      const { error } = await supabase
+        .from('free_listing_requests')
+        .update({
+          status,
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: user?.id,
+          notes: notes || null,
+        })
+        .eq('id', requestId);
+
+      if (error) throw error;
+
+      setFreeListingRequests(prev =>
+        prev.map(request =>
+          request.id === requestId
+            ? {
+                ...request,
+                status,
+                reviewed_at: new Date().toISOString(),
+                reviewed_by: user?.id,
+                notes: notes || null,
+              }
+            : request
+        )
+      );
+
+      toast.success(`Request ${status}`);
+    } catch (error: any) {
+      console.error('Error updating request status:', error);
+      toast.error(error.message || 'Failed to update request status');
+    }
+  };
+
   const handleDeleteProfile = async (profileId: string) => {
     if (!window.confirm('Are you sure you want to delete this profile? This action cannot be undone.')) {
       return;
@@ -256,8 +365,257 @@ const AdminDashboardPage: React.FC = () => {
               Admin Dashboard
             </h1>
             <p className="mt-2 text-gray-600">
-              Manage profiles and messages
+              Manage profiles, messages, and listing requests
             </p>
+          </div>
+
+          {/* Free Listing Requests Section */}
+          <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-8">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">Free Listing Requests</h2>
+              <p className="mt-1 text-sm text-gray-500">
+                Review and manage free listing applications
+              </p>
+            </div>
+
+            {showRequestDetails && selectedRequest ? (
+              <div className="p-6 space-y-6">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowRequestDetails(false);
+                    setSelectedRequest(null);
+                  }}
+                  className="mb-4"
+                >
+                  Back to List
+                </Button>
+                
+                <div className="bg-gray-50 p-6 rounded-lg">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-500">Contact Info</h4>
+                      <p className="text-gray-900">{selectedRequest.full_name}</p>
+                      <p className="text-gray-600">{selectedRequest.email}</p>
+                      {selectedRequest.phone && (
+                        <p className="text-gray-600">{selectedRequest.phone}</p>
+                      )}
+                      <p className="text-gray-600">
+                        {selectedRequest.city}, {selectedRequest.state}
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-500">Social Media</h4>
+                      {selectedRequest.instagram && (
+                        <p className="text-gray-600">Instagram: {selectedRequest.instagram}</p>
+                      )}
+                      {selectedRequest.facebook && (
+                        <p className="text-gray-600">Facebook: {selectedRequest.facebook}</p>
+                      )}
+                      {selectedRequest.youtube && (
+                        <p className="text-gray-600">YouTube: {selectedRequest.youtube}</p>
+                      )}
+                      {selectedRequest.tiktok && (
+                        <p className="text-gray-600">TikTok: {selectedRequest.tiktok}</p>
+                      )}
+                      {selectedRequest.website && (
+                        <p className="text-gray-600">Website: {selectedRequest.website}</p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-500">Experience</h4>
+                      <p className="text-gray-900">{selectedRequest.experience}</p>
+                    </div>
+                    
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-500">Paid Events</h4>
+                      <p className="text-gray-900">{selectedRequest.paid_events}</p>
+                    </div>
+
+                    {selectedRequest.event_types && (
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500">Event Types</h4>
+                        <p className="text-gray-900">{selectedRequest.event_types}</p>
+                      </div>
+                    )}
+
+                    {selectedRequest.characters && (
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500">Characters</h4>
+                        <p className="text-gray-900">{selectedRequest.characters}</p>
+                      </div>
+                    )}
+
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-500">Bio</h4>
+                      <p className="text-gray-900 whitespace-pre-wrap">{selectedRequest.bio}</p>
+                    </div>
+
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-500">Travel</h4>
+                      <p className="text-gray-900">{selectedRequest.travel}</p>
+                    </div>
+
+                    {selectedRequest.why_join && (
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500">Why Join</h4>
+                        <p className="text-gray-900 whitespace-pre-wrap">{selectedRequest.why_join}</p>
+                      </div>
+                    )}
+
+                    {selectedRequest.questions && (
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500">Questions</h4>
+                        <p className="text-gray-900 whitespace-pre-wrap">{selectedRequest.questions}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => handleUpdateRequestStatus(selectedRequest.id, 'approved')}
+                      className="flex items-center text-green-600 hover:text-green-700"
+                      disabled={selectedRequest.status !== 'pending'}
+                    >
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                      Approve
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => handleUpdateRequestStatus(selectedRequest.id, 'rejected')}
+                      className="flex items-center text-red-600 hover:text-red-700"
+                      disabled={selectedRequest.status !== 'pending'}
+                    >
+                      <XCircle className="mr-2 h-4 w-4" />
+                      Reject
+                    </Button>
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleDeleteRequest(selectedRequest.id)}
+                    disabled={deletingRequestId === selectedRequest.id}
+                    className="flex items-center text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    {deletingRequestId === selectedRequest.id ? 'Deleting...' : 'Delete'}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Date
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Name
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Location
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {freeListingRequests.map((request) => (
+                      <tr
+                        key={request.id}
+                        className={`hover:bg-gray-50 ${
+                          request.status === 'pending' ? 'bg-yellow-50' : ''
+                        }`}
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(request.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">
+                            {request.full_name}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {request.email}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {request.city}, {request.state}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span
+                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              request.status === 'approved'
+                                ? 'bg-green-100 text-green-800'
+                                : request.status === 'rejected'
+                                ? 'bg-red-100 text-red-800'
+                                : 'bg-yellow-100 text-yellow-800'
+                            }`}
+                          >
+                            {request.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="flex justify-end space-x-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedRequest(request);
+                                setShowRequestDetails(true);
+                              }}
+                              className="text-purple-600 hover:text-purple-700"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            {request.status === 'pending' && (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleUpdateRequestStatus(request.id, 'approved')}
+                                  className="text-green-600 hover:text-green-700"
+                                >
+                                  <CheckCircle className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleUpdateRequestStatus(request.id, 'rejected')}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <XCircle className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteRequest(request.id)}
+                              disabled={deletingRequestId === request.id}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
           {/* Messages Section */}
