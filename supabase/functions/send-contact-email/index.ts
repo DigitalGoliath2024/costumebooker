@@ -1,6 +1,5 @@
-import { createClient } from 'npm:@supabase/supabase-js@2.39.3';
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
-import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
+import { createClient } from 'npm:@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,7 +11,7 @@ const corsHeaders = {
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response('OK', { 
+    return new Response(null, { 
       status: 200,
       headers: corsHeaders
     });
@@ -105,61 +104,55 @@ serve(async (req) => {
 
     console.log('Message stored successfully:', { messageId: insertData?.id });
 
-    // Validate SMTP credentials
-    const smtpHost = Deno.env.get('SMTP_HOST');
-    const smtpPort = Number(Deno.env.get('SMTP_PORT'));
-    const smtpUser = Deno.env.get('SMTP_USER');
-    const smtpPass = Deno.env.get('SMTP_PASS');
+    // Get Mailgun credentials
+    const mailgunDomain = Deno.env.get('MAILGUN_DOMAIN');
+    const mailgunApiKey = Deno.env.get('MAILGUN_API_KEY');
 
-    if (!smtpHost || !smtpPort || !smtpUser || !smtpPass) {
-      console.error('Missing SMTP credentials');
-      throw new Error('Missing SMTP credentials');
+    if (!mailgunDomain || !mailgunApiKey) {
+      console.error('Missing Mailgun credentials');
+      throw new Error('Missing Mailgun credentials');
     }
 
-    console.log('Sending email via SMTP');
+    // Send email via Mailgun API
+    console.log('Sending email via Mailgun');
     
-    // Set up SMTP client
-    const client = new SmtpClient({
-      connection: {
-        hostname: smtpHost,
-        port: smtpPort,
-        tls: smtpPort === 465,
-        auth: {
-          username: smtpUser,
-          password: smtpPass,
-        },
-      },
-    });
-
-    try {
-      await client.send({
-        from: 'noreply@costumecameos.com',
-        to: recipientEmail,
-        subject: `New Message from ${senderName} via CostumeCameos`,
-        content: `New Contact Message
+    const mailgunUrl = `https://api.mailgun.net/v3/${mailgunDomain}/messages`;
+    const formData = new FormData();
+    formData.append('from', `CostumeCameos <noreply@${mailgunDomain}>`);
+    formData.append('to', recipientEmail);
+    formData.append('subject', `New Message from ${senderName} via CostumeCameos`);
+    formData.append('text', `New Contact Message
 
 From: ${senderName} (${senderEmail})
 
 Message:
 ${message}
 
-This message was sent through CostumeCameos. You can reply directly to this email to respond to ${senderName}.`,
-        html: `
-          <h2>New Contact Message</h2>
-          <p><strong>From:</strong> ${senderName} (${senderEmail})</p>
-          <div style="margin: 20px 0; padding: 20px; background: #f5f5f5; border-radius: 5px;">
-            <p style="white-space: pre-wrap;">${message}</p>
-          </div>
-          <p style="color: #666; font-size: 0.9em;">This message was sent through CostumeCameos. You can reply directly to this email to respond to ${senderName}.</p>
-        `,
-      });
-      console.log('Email sent successfully');
-    } catch (emailError) {
-      console.error('SMTP error:', emailError);
-      throw new Error(`Failed to send email: ${emailError.message}`);
-    } finally {
-      await client.close();
+This message was sent through CostumeCameos. You can reply directly to this email to respond to ${senderName}.`);
+    formData.append('html', `
+      <h2>New Contact Message</h2>
+      <p><strong>From:</strong> ${senderName} (${senderEmail})</p>
+      <div style="margin: 20px 0; padding: 20px; background: #f5f5f5; border-radius: 5px;">
+        <p style="white-space: pre-wrap;">${message}</p>
+      </div>
+      <p style="color: #666; font-size: 0.9em;">This message was sent through CostumeCameos. You can reply directly to this email to respond to ${senderName}.</p>
+    `);
+
+    const mailgunResponse = await fetch(mailgunUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${btoa(`api:${mailgunApiKey}`)}`,
+      },
+      body: formData,
+    });
+
+    if (!mailgunResponse.ok) {
+      const mailgunError = await mailgunResponse.json();
+      console.error('Mailgun API error:', mailgunError);
+      throw new Error(`Failed to send email: ${mailgunError.message}`);
     }
+
+    console.log('Email sent successfully');
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,

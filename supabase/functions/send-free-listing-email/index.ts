@@ -1,5 +1,4 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
-import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
 import { multiParser } from 'https://deno.land/x/multiparser@0.114.0/mod.ts';
 
 const corsHeaders = {
@@ -51,37 +50,14 @@ serve(async (req) => {
       throw new Error('Missing required fields');
     }
 
-    // Validate SMTP configuration
-    const smtpHost = Deno.env.get('SMTP_HOST');
-    const smtpPort = Number(Deno.env.get('SMTP_PORT'));
-    const smtpUser = Deno.env.get('SMTP_USER');
-    const smtpPass = Deno.env.get('SMTP_PASS');
+    // Get Mailgun credentials
+    const mailgunDomain = Deno.env.get('MAILGUN_DOMAIN');
+    const mailgunApiKey = Deno.env.get('MAILGUN_API_KEY');
 
-    console.log('SMTP Configuration:', {
-      host: smtpHost,
-      port: smtpPort,
-      user: smtpUser,
-      hasPassword: !!smtpPass
-    });
-
-    if (!smtpHost || !smtpPort || !smtpUser || !smtpPass) {
-      console.error('Missing SMTP credentials');
-      throw new Error('Server configuration error');
+    if (!mailgunDomain || !mailgunApiKey) {
+      console.error('Missing Mailgun credentials');
+      throw new Error('Missing Mailgun credentials');
     }
-
-    // Initialize SMTP client
-    console.log('Initializing SMTP client');
-    const client = new SmtpClient({
-      connection: {
-        hostname: smtpHost,
-        port: smtpPort,
-        tls: smtpPort === 465,
-        auth: {
-          username: smtpUser,
-          password: smtpPass,
-        },
-      },
-    });
 
     // Format email content
     console.log('Formatting email content');
@@ -128,24 +104,34 @@ Why Join: ${data.whyJoin || 'Not provided'}
 Questions/Notes: ${data.questions || 'Not provided'}
     `;
 
-    try {
-      console.log('Sending email');
-      await client.send({
-        from: 'noreply@costumecameos.com',
-        to: 'support@costumecameos.com',
-        subject: `New Free Listing Application - ${data.fullName}`,
-        content: emailContent,
-        html: emailContent.replace(/\n/g, '<br>'),
-      });
+    const htmlContent = emailContent.replace(/\n/g, '<br>');
 
-      console.log('Email sent successfully');
-    } catch (error) {
-      console.error('SMTP error:', error);
-      throw new Error(`Failed to send email: ${error.message}`);
-    } finally {
-      await client.close();
-      console.log('SMTP client closed');
+    // Send email via Mailgun API
+    console.log('Sending email via Mailgun');
+    
+    const mailgunUrl = `https://api.mailgun.net/v3/${mailgunDomain}/messages`;
+    const emailFormData = new FormData();
+    emailFormData.append('from', `CostumeCameos <noreply@${mailgunDomain}>`);
+    emailFormData.append('to', 'support@costumecameos.com');
+    emailFormData.append('subject', `New Free Listing Application - ${data.fullName}`);
+    emailFormData.append('text', emailContent);
+    emailFormData.append('html', htmlContent);
+
+    const mailgunResponse = await fetch(mailgunUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${btoa(`api:${mailgunApiKey}`)}`,
+      },
+      body: emailFormData,
+    });
+
+    if (!mailgunResponse.ok) {
+      const mailgunError = await mailgunResponse.json();
+      console.error('Mailgun API error:', mailgunError);
+      throw new Error(`Failed to send email: ${mailgunError.message}`);
     }
+
+    console.log('Email sent successfully');
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
