@@ -325,7 +325,7 @@ const HomePage: React.FC = () => {
               Featured Performers
             </h2>
             <p className="text-xl text-accent-600 max-w-3xl mx-auto">
-              Discover our top costumed performers available for events, parties, and conventions
+              Discover our top costumed performers available for events, parties, and conventions.
             </p>
           </div>
 
