@@ -5,6 +5,7 @@ import Textarea from '../ui/Textarea';
 import Checkbox from '../ui/Checkbox';
 import Button from '../ui/Button';
 import toast from 'react-hot-toast';
+import { supabase } from '../../lib/supabase';
 
 type ContactFormProps = {
   profileId: string;
@@ -63,15 +64,9 @@ const ContactForm: React.FC<ContactFormProps> = ({ profileId, profileName }) => 
         return;
       }
 
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/contact_messages`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-          'Prefer': 'return=minimal',
-        },
-        body: JSON.stringify({
+      const { error } = await supabase
+        .from('contact_messages')
+        .insert({
           profile_id: profileId,
           sender_name: data.senderName,
           sender_email: data.senderEmail,
@@ -82,14 +77,11 @@ const ContactForm: React.FC<ContactFormProps> = ({ profileId, profileName }) => 
           message: data.message,
           event_type: data.eventTypes,
           captcha_answer: parseInt(data.captchaAnswer),
-        }),
-      });
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to submit inquiry');
-      }
+      if (error) throw error;
 
-      toast.success('Inquiry submitted successfully!');
+      toast.success('Message sent successfully!');
       reset();
       
       // Generate new captcha numbers
@@ -97,8 +89,8 @@ const ContactForm: React.FC<ContactFormProps> = ({ profileId, profileName }) => 
       const num2 = Math.floor(Math.random() * 9) + 1;
       setCaptchaNumbers({ num1, num2, sum: num1 + num2 });
     } catch (error: any) {
-      console.error('Error submitting inquiry:', error);
-      toast.error(error.message || 'Failed to submit inquiry');
+      console.error('Error sending message:', error);
+      toast.error(error.message || 'Failed to send message');
     }
   };
 
@@ -210,12 +202,12 @@ const ContactForm: React.FC<ContactFormProps> = ({ profileId, profileName }) => 
 
       <div className="pt-2">
         <Button type="submit" disabled={isSubmitting} className="w-full">
-          {isSubmitting ? 'Submitting...' : 'Send Inquiry'}
+          {isSubmitting ? 'Sending...' : 'Send Message'}
         </Button>
       </div>
 
       <p className="text-xs text-gray-500 mt-2">
-        Your inquiry will be sent directly to the performer. They will contact you using the provided information.
+        Your message will be sent directly to the performer. They will contact you using the provided information.
       </p>
     </form>
   );
