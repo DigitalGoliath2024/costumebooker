@@ -55,7 +55,9 @@ const SafetyFirstPage: React.FC = () => {
                           </li>
                           <li className="flex items-center gap-2">
                             <span className="w-2 h-2 bg-teal-500 rounded-full" />
-                            Write a short, fun, and clear bio explaining who you are and what you offer. Do not use trademarked names, images that are not you, or say you are the trademarked character your protraying. Becareful what you say. Example: 'I am the Ice Queen' for the snow related princess we all know.
+                            Write a short, fun, and clear bio explaining who you are and what you offer</li> 
+                          <li className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-teal-500 rounded-full" />Do not use trademarked names, images, or say you are the trademarked character. Example: 'I am the Ice Queen' for the snow related princess we all know
                           </li>
                           <li className="flex items-center gap-2">
                             <span className="w-2 h-2 bg-teal-500 rounded-full" />
