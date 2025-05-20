@@ -469,7 +469,7 @@ const DashboardPage: React.FC = () => {
                         <Link to="/safety-first">
                           <Button variant="outline" size="sm" className="flex items-center gap-2">
                             <Shield className="h-4 w-4" />
-                            Performer Tips & Safety Guide
+                            Performer Tips & <br/> Safety Guide
                           </Button>
                         </Link>
                       </div>
