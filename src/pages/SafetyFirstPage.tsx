@@ -57,7 +57,7 @@ const SafetyFirstPage: React.FC = () => {
                             <span className="w-2 h-2 bg-teal-500 rounded-full" />
                             Write a short, fun, and clear bio explaining who you are and what you offer</li> 
                           <li className="flex items-center gap-2">
-                            <span className="w-2 h-2 bg-teal-500 rounded-full" />Do not use trademarked names, images, or say you are the trademarked character. Example: 'I am the Ice Queen' for the snow related princess we all know
+                            <span className="w-2 h-2 bg-teal-500 rounded-full" />Do not use trademarked names, images, or say you are the trademarked character. Use Generic titles or your own.
                           </li>
                           <li className="flex items-center gap-2">
                             <span className="w-2 h-2 bg-teal-500 rounded-full" />
