@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, AlertTriangle } from 'lucide-react';
+import { Shield, AlertTriangle, DollarSign, MessageSquare, Calendar, CheckCircle2 } from 'lucide-react';
 import Layout from '../components/layout/Layout';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -24,110 +24,268 @@ const SafetyFirstPage: React.FC = () => {
             <div className="bg-gradient-premium text-white p-8">
               <div className="flex items-center gap-3 mb-4">
                 <Shield className="h-8 w-8" />
-                <h1 className="text-3xl font-bold">Safety First: Booking Smart</h1>
+                <h1 className="text-3xl font-bold">How to Be a Successful Performer</h1>
               </div>
               <p className="text-lg opacity-90">
-                Your safety is our top priority. Follow these essential guidelines when responding to booking requests and performing at events.
+                Make Money, Stay Safe, and Have Fun Doing What You Love
               </p>
             </div>
 
             <div className="p-8">
               <div className="prose max-w-none">
-                <h2 className="flex items-center gap-2 text-2xl font-semibold text-gray-900 mb-6">
-                  <span>🎭</span> Smart Booking & Performance Tips for Entertainers
-                </h2>
+                <p className="text-lg text-gray-700 mb-8">
+                  So you've got a killer costume, a character voice that turns heads, and you're ready to get paid to entertain — let's make sure you do it right. This guide breaks down how to start, what to charge, and how to stay safe while building your performer profile on CostumeCameos.
+                </p>
 
                 <div className="space-y-8">
                   <section>
-                    <h3 className="text-xl font-semibold text-gray-900">1. Research Your Contact</h3>
-                    <ul className="mt-2 space-y-2">
-                      <li><strong>Verify Identity:</strong> Before accepting any booking, research the individual or organization. Check their social media profiles, official websites, and online reviews.</li>
-                      <li><strong>Look for Red Flags:</strong> Be cautious if they lack an online presence, have inconsistent information, or if their profiles were recently created.</li>
-                    </ul>
-                  </section>
+                    <h2 className="flex items-center gap-2 text-2xl font-semibold text-gray-900 mb-6">
+                      <CheckCircle2 className="h-6 w-6 text-teal-500" />
+                      Getting Started
+                    </h2>
 
-                  <section>
-                    <h3 className="text-xl font-semibold text-gray-900">2. Communicate Clearly</h3>
-                    <ul className="mt-2 space-y-2">
-                      <li><strong>Use Official Channels:</strong> Whenever possible, communicate through official platforms or email addresses.</li>
-                      <li><strong>Document Everything:</strong> Keep records of all communications, agreements, and transactions. </li>
-                    </ul>
-                  </section>
-
-                  <section>
-                    <h3 className="text-xl font-semibold text-gray-900">3. Share Your Itinerary</h3>
-                    <ul className="mt-2 space-y-2">
-                      <li><strong>Inform Trusted Contacts:</strong> Always let a friend or family member know your schedule, including locations and times.</li>
-                      <li><strong>Use Tracking Apps:</strong> Consider using apps that allow trusted individuals to track your location in real-time.</li>
-                    </ul>
-                  </section>
-
-                  <section>
-                    <h3 className="text-xl font-semibold text-gray-900">4. Meet in Public First</h3>
-                    <ul className="mt-2 space-y-2">
-                      <li><strong>Initial Meetings:</strong> If possible, meet clients in public places before agreeing to perform at private venues.</li>
-                      <li><strong>Bring a Companion:</strong> Having someone accompany you can deter potential threats and provide support.</li>
-                    </ul>
-                  </section>
-
-                  <section>
-                    <h3 className="text-xl font-semibold text-gray-900">5. Assess the Venue</h3>
-                    <ul className="mt-2 space-y-2">
-                      <li><strong>Request Details:</strong> Ask for specific information about the venue, including address, parking, and entry points.</li>
-                      <li><strong>Use Maps:</strong> Utilize online maps to view the location beforehand and assess the surrounding area.</li>
-                    </ul>
-                  </section>
-
-                  <section>
-                    <h3 className="text-xl font-semibold text-gray-900">6. Secure Payment</h3>
-                    <ul className="mt-2 space-y-2">
-                      <li><strong>Upfront Deposits:</strong> Request a deposit before the performance to ensure commitment.</li>
-                      <li><strong>Use Secure Methods:</strong> Opt for payment platforms that offer protection, such as PayPal or Venmo.</li>
-                    </ul>
-                  </section>
-
-                  <section>
-                    <h3 className="text-xl font-semibold text-gray-900">7. Set Clear Boundaries</h3>
-                    <ul className="mt-2 space-y-2">
-                      <li><strong>Define Terms:</strong> Clearly outline the scope of your performance, including duration, content, and any restrictions.</li>
-                      <li><strong>Stick to Agreements:</strong> Avoid making last-minute changes that haven't been agreed upon in writing.</li>
-                    </ul>
-                  </section>
-
-                  <section>
-                    <h3 className="text-xl font-semibold text-gray-900">8. Stay Aware During Performances</h3>
-                    <ul className="mt-2 space-y-2">
-                      <li><strong>Monitor the Crowd:</strong> Keep an eye on your audience and be alert to any unusual behavior.</li>
-                      <li><strong>Protect Your Belongings:</strong> Keep personal items and equipment secure and within sight.</li>
-                    </ul>
-                  </section>
-
-                  <section>
-                    <h3 className="text-xl font-semibold text-gray-900">9. Know Local Regulations</h3>
-                    <ul className="mt-2 space-y-2">
-                      <li><strong>Permits and Licenses:</strong> Ensure you have the necessary permissions to perform in public spaces.</li>
-                      <li><strong>Noise Ordinances:</strong> Be aware of local laws regarding sound levels and performance times.</li>
-                    </ul>
-                  </section>
-
-                  <section>
-                    <h3 className="text-xl font-semibold text-gray-900">10. Trust Your Instincts</h3>
-                    <ul className="mt-2 space-y-2">
-                      <li><strong>Listen to Your Gut:</strong> If something feels off or unsafe, prioritize your well-being and reconsider the engagement.</li>
-                      <li><strong>Have an Exit Plan:</strong> Always have a strategy to leave a situation quickly if needed.</li>
-                    </ul>
-                  </section>
-
-                  <div className="mt-8 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                    <div className="flex items-start gap-3">
-                      <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                    <div className="bg-gradient-to-br from-teal-50 to-primary-50 rounded-lg p-6 space-y-6">
                       <div>
-                        <h3 className="font-semibold text-yellow-800">Disclaimer</h3>
-                        <p className="mt-1 text-yellow-700">
-                          This guide offers general advice based on common practices among entertainers. It does not guarantee safety and should not replace personal judgment or professional counsel. Always prioritize your safety and make decisions that best suit your circumstances.
-                        </p>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-3">1. Build a Strong Profile</h3>
+                        <p className="text-gray-700 mb-4">Your profile is your first impression — make it count.</p>
+                        <ul className="space-y-2 text-gray-700">
+                          <li className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-teal-500 rounded-full" />
+                            Upload high-quality photos of you in costume (at least 2-3)
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-teal-500 rounded-full" />
+                            Write a short, fun, and clear bio explaining who you are and what you offer
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-teal-500 rounded-full" />
+                            Add your social links like Instagram, TikTok, or YouTube for credibility
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-teal-500 rounded-full" />
+                            Tag your location and costume style for better visibility in search
+                          </li>
+                        </ul>
+                      </div>
+
+                      <div>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-3">2. Use a Performer Alias</h3>
+                        <p className="text-gray-700 mb-4">Protect your privacy.</p>
+                        <ul className="space-y-2 text-gray-700">
+                          <li className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-teal-500 rounded-full" />
+                            Use a separate email just for bookings
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-teal-500 rounded-full" />
+                            Consider creating a performer name or alias
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-teal-500 rounded-full" />
+                            Don't give out personal info unless necessary
+                          </li>
+                        </ul>
                       </div>
                     </div>
+                  </section>
+
+                  <section>
+                    <h2 className="flex items-center gap-2 text-2xl font-semibold text-gray-900 mb-6">
+                      <DollarSign className="h-6 w-6 text-green-500" />
+                      Setting Your Rates
+                    </h2>
+
+                    <div className="bg-gradient-to-br from-green-50 to-teal-50 rounded-lg p-6 space-y-6">
+                      <div>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-3">Know Your Worth</h3>
+                        <p className="text-gray-700 mb-4">
+                          Your time, talent, and costume investment matter. We recommend starting with $100–$150 per hour and setting a 2-hour minimum. Some events may offer more, but don't undercut yourself just to land a gig. The clients who value you will pay you.
+                        </p>
+                      </div>
+
+                      <div>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-3">What to Include in Your Fee:</h3>
+                        <ul className="space-y-2 text-gray-700">
+                          <li className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-green-500 rounded-full" />
+                            Travel time (to/from the venue)
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-green-500 rounded-full" />
+                            Time to prep and get into character
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-green-500 rounded-full" />
+                            Performance time, photo ops, and interaction
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-green-500 rounded-full" />
+                            Add-ons: custom shoutouts, themed games, special requests
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section>
+                    <h2 className="flex items-center gap-2 text-2xl font-semibold text-gray-900 mb-6">
+                      <Shield className="h-6 w-6 text-purple-500" />
+                      Safety First – Always
+                    </h2>
+
+                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-6 space-y-6">
+                      <div>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-3">1. Confirm Details in Advance</h3>
+                        <p className="text-gray-700 mb-4">Before accepting a gig, get all the key info:</p>
+                        <ul className="space-y-2 text-gray-700">
+                          <li className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-purple-500 rounded-full" />
+                            Event date, time, and exact location
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-purple-500 rounded-full" />
+                            Contact person's name and phone number
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-purple-500 rounded-full" />
+                            What's expected of you: appearance only, interaction, games, photos?
+                          </li>
+                        </ul>
+                      </div>
+
+                      <div>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-3">2. Tell Someone</h3>
+                        <p className="text-gray-700 mb-4">Always share your plans with a friend or family member.</p>
+                        <ul className="space-y-2 text-gray-700">
+                          <li className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-purple-500 rounded-full" />
+                            Send them the address and event time
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-purple-500 rounded-full" />
+                            Let them know when you expect to be done
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-purple-500 rounded-full" />
+                            Check in when you arrive and leave
+                          </li>
+                        </ul>
+                      </div>
+
+                      <div>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-3">3. Trust Your Gut</h3>
+                        <p className="text-gray-700 mb-4">If something feels sketchy, it probably is.</p>
+                        <ul className="space-y-2 text-gray-700">
+                          <li className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-purple-500 rounded-full" />
+                            Don't accept vague details or last-minute location changes
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-purple-500 rounded-full" />
+                            Don't go into a situation where you don't feel fully comfortable
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-purple-500 rounded-full" />
+                            It's okay to say no or back out
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section>
+                    <h2 className="flex items-center gap-2 text-2xl font-semibold text-gray-900 mb-6">
+                      <MessageSquare className="h-6 w-6 text-blue-500" />
+                      Communication Tips
+                    </h2>
+
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-6">
+                      <ul className="space-y-2 text-gray-700">
+                        <li className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-blue-500 rounded-full" />
+                          Be polite, professional, and clear in your messages
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-blue-500 rounded-full" />
+                          Confirm all event details in writing
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-blue-500 rounded-full" />
+                          Set boundaries early — this is a job, not a favor
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-blue-500 rounded-full" />
+                          Never send inappropriate content, even if asked
+                        </li>
+                      </ul>
+                    </div>
+                  </section>
+
+                  <section>
+                    <h2 className="flex items-center gap-2 text-2xl font-semibold text-gray-900 mb-6">
+                      <AlertTriangle className="h-6 w-6 text-amber-500" />
+                      What Not to Do
+                    </h2>
+
+                    <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg p-6">
+                      <ul className="space-y-2 text-gray-700">
+                        <li className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-amber-500 rounded-full" />
+                          Don't undercharge just to get gigs — it hurts you and the whole community
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-amber-500 rounded-full" />
+                          Don't show up unprepared or in a half-finished costume
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-amber-500 rounded-full" />
+                          Don't give out your personal phone number too early
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-amber-500 rounded-full" />
+                          Don't accept gigs that promise "exposure" instead of payment
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-amber-500 rounded-full" />
+                          Don't walk into unknown environments without doing some research first
+                        </li>
+                      </ul>
+                    </div>
+                  </section>
+
+                  <section>
+                    <h2 className="flex items-center gap-2 text-2xl font-semibold text-gray-900 mb-6">
+                      <Calendar className="h-6 w-6 text-indigo-500" />
+                      Stay Organized
+                    </h2>
+
+                    <div className="bg-gradient-to-br from-indigo-50 to-violet-50 rounded-lg p-6">
+                      <ul className="space-y-2 text-gray-700">
+                        <li className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-indigo-500 rounded-full" />
+                          Use a calendar to track bookings, availability, and deadlines
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-indigo-500 rounded-full" />
+                          Save important contacts and conversations
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-indigo-500 rounded-full" />
+                          Set up payment tracking (PayPal, CashApp, Venmo, etc.)
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-indigo-500 rounded-full" />
+                          Follow up after events for reviews or referrals
+                        </li>
+                      </ul>
+                    </div>
+                  </section>
+
+                  <div className="mt-12 bg-gradient-premium text-white p-8 rounded-lg">
+                    <h2 className="text-2xl font-bold mb-4">Final Thought: You're the Talent — Act Like It</h2>
+                    <p className="text-lg opacity-90">
+                      This is your time to shine. You're not just showing up in costume — you're delivering a full experience. Charge what you're worth, set boundaries, stay safe, and keep it fun.
+                    </p>
                   </div>
                 </div>
               </div>
