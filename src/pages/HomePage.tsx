@@ -295,6 +295,37 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
+      {/* Free Listing Promotion Section */}
+      <section className="bg-gradient-premium py-16 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent_70%)]"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <div className="text-center">
+            <div className="inline-block bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full text-white/90 text-sm font-medium mb-4">
+              🎭 Limited Time Opportunity
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              First 150 Qualified Listings are FREE!
+            </h2>
+            <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
+              Are you a talented cosplay performer? Join our growing community and get discovered by clients in your area. 
+              No subscription fees, no hidden costs.
+            </p>
+            <Link to="/free-listing">
+              <Button 
+                size="lg" 
+                variant="secondary"
+                className="animate-pulse hover:animate-none"
+              >
+                📩 Apply for Your Free Listing Now
+              </Button>
+            </Link>
+            <p className="mt-4 text-sm text-white/80">
+              *Limited spots available. Must meet our quality and safety guidelines.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Search Section */}
       <section className="bg-white py-8 border-b border-accent-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
