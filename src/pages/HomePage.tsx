@@ -424,7 +424,7 @@ const HomePage: React.FC = () => {
               <div className="absolute inset-0 bg-gradient-premium opacity-80 group-hover:opacity-90 transition-opacity"></div>
               <div className="relative p-8 text-center">
                 <h3 className="text-xl font-bold text-white mb-2">Superheroes</h3>
-                <p className="text-white/90 mb-4">Marvel, DC, and more</p>
+                <p className="text-white/90 mb-4">Cinema, comics, history and more</p>
                 <Button variant="outline" className="bg-white/10 hover:bg-white/20 text-white border-white/30">
                   Browse Heroes
                 </Button>
